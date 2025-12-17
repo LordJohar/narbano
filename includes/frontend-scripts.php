@@ -56,24 +56,24 @@ function nardone_frontend_scripts() {
             $(this).val(val);
         });
 
-        var $form = $('form.register');
-        if (!$form.length) {
+        var \$form = $('form.register');
+        if (!\$form.length) {
             return;
         }
 
         // Move password field under OTP field for better UX.
-        var $passwordRow = $form.find('#reg_password').closest('p');
-        var $otpRow      = $form.find('#reg_nardone_otp_code').closest('p');
+        var \$passwordRow = \$form.find('#reg_password').closest('p');
+        var \$otpRow      = \$form.find('#reg_nardone_otp_code').closest('p');
 
-        if ($passwordRow.length && $otpRow.length) {
-            $passwordRow.insertAfter($otpRow);
+        if (\$passwordRow.length && \$otpRow.length) {
+            \$passwordRow.insertAfter(\$otpRow);
         }
 
         // Handle OTP send button.
         $('#nardone_send_otp_btn').on('click', function(e) {
             e.preventDefault();
 
-            var $btn     = $(this);
+            var \$btn     = $(this);
             var phoneRaw  = $.trim( $('#reg_billing_phone').val() );
             var phone     = nardoneNormalizeDigits(phoneRaw);
             $('#reg_billing_phone').val(phone);
@@ -89,12 +89,12 @@ function nardone_frontend_scripts() {
                 return;
             }
 
-            if ($btn.data('sending')) {
+            if (\$btn.data('sending')) {
                 return;
             }
-            $btn.data('sending', true);
-            var oldText = $btn.text();
-            $btn.text('Sending...').prop('disabled', true);
+            \$btn.data('sending', true);
+            var oldText = \$btn.text();
+            \$btn.text('Sending...').prop('disabled', true);
 
             $.ajax({
                 url: NardoneData.ajax_url,
@@ -120,8 +120,8 @@ function nardone_frontend_scripts() {
                 alert('Server communication error. Please try again later.');
             })
             .always(function() {
-                $btn.data('sending', false);
-                $btn.text(oldText).prop('disabled', false);
+                \$btn.data('sending', false);
+                \$btn.text(oldText).prop('disabled', false);
             });
         });
 
