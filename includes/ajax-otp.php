@@ -6,104 +6,79 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Prevent direct access
 }
-
 /**
- * Send OTP to the provided mobile number using panel settings.
+ * Send OTP via AJAX
  */
 function nardone_send_otp_ajax() {
-    if ( ! isset( $_POST['nonce'], $_POST['phone'] ) ) {
-        wp_send_json_error( array(
-            'message' => __( 'Invalid request.', 'nardone' ),
-        ) );
+    // Verify nonce
+    if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'nardone_send_otp' ) ) {
+        wp_send_json_error( array( 'message' => 'خطای امنیتی' ) );
     }
-
-    if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'nardone_send_otp' ) ) {
-        wp_send_json_error( array(
-            'message' => __( 'Security check failed. Please refresh the page.', 'nardone' ),
-        ) );
+    
+    // Get phone
+    $phone = nardone_normalize_phone_digits( $_POST['phone'] ?? '' );
+    
+    if ( ! nardone_is_valid_mobile( $phone ) ) {
+        wp_send_json_error( array( 'message' => 'شماره موبایل معتبر نیست' ) );
     }
-
-    $api_key       = trim( (string) get_option( NARDONE_OPT_API_KEY, '' ) );
-    $pattern_code  = trim( (string) get_option( NARDONE_OPT_PATTERN_CODE, '' ) );
-    $from_number   = trim( (string) get_option( NARDONE_OPT_FROM_NUMBER, '' ) );
-    $pattern_param = trim( (string) get_option( NARDONE_OPT_PATTERN_PARAM, 'otp_code' ) );
-
-    if ( empty( $api_key ) || empty( $pattern_code ) || empty( $from_number ) || empty( $pattern_param ) ) {
-        wp_send_json_error( array(
-            'message' => __( 'OTP settings are incomplete. Please contact site admin.', 'nardone' ),
-        ) );
-    }
-
-    $phone = nardone_normalize_phone_digits( $_POST['phone'] );
-
-    if ( ! preg_match( '/^09[0-9]{9}$/', $phone ) ) {
-        wp_send_json_error( array(
-            'message' => __( 'Invalid mobile number. Example: 09121234567', 'nardone' ),
-        ) );
-    }
-
-    $otp_key  = 'nardone_otp_' . md5( $phone );
+    
+    // Check rate limit
+    $otp_key = 'nardone_otp_' . md5( $phone );
     $existing = get_transient( $otp_key );
-
-    if ( $existing && isset( $existing['last_sent'] ) && ( time() - (int) $existing['last_sent'] ) < 60 ) {
-        wp_send_json_error( array(
-            'message' => __( 'A code was recently sent. Please wait a bit and try again.', 'nardone' ),
-        ) );
+    
+    if ( $existing && isset( $existing['last_sent'] ) && ( time() - $existing['last_sent'] ) < 60 ) {
+        wp_send_json_error( array( 'message' => 'لطفا ۱ دقیقه صبر کنید' ) );
     }
-
-    $otp_code = wp_rand( 100000, 999999 );
-
-    $data = array(
-        'code'      => (string) $otp_code,
+    
+    // Generate OTP
+    $otp_code = str_pad( wp_rand( 0, 999999 ), 6, '0', STR_PAD_LEFT );
+    
+    // Save OTP data
+    $otp_data = array(
+        'code'      => $otp_code,
         'phone'     => $phone,
         'expires'   => time() + NARDONE_OTP_EXPIRY,
-        'last_sent' => time(),
+        'last_sent' => time()
     );
-    set_transient( $otp_key, $data, NARDONE_OTP_EXPIRY + 60 );
-
-    $body = array(
-        'sending_type' => 'pattern',
-        'from_number'  => $from_number,
-        'code'         => $pattern_code,
-        'recipients'   => array( $phone ),
-        'params'       => array(
-            $pattern_param => (string) $otp_code,
-        ),
-    );
-
-    $response = wp_remote_post( NARDONE_OTP_API_URL, array(
-        'headers' => array(
-            'Authorization' => $api_key,
-            'Content-Type'  => 'application/json',
-        ),
-        'body'    => wp_json_encode( $body ),
-        'timeout' => 15,
-    ) );
-
-    if ( is_wp_error( $response ) ) {
-        wp_send_json_error( array(
-            'message' => __( 'Could not reach SMS service. Please try again later.', 'nardone' ),
+    
+    set_transient( $otp_key, $otp_data, NARDONE_OTP_EXPIRY + 60 );
+    
+    // Get SMS settings
+    $api_key       = get_option( 'nardone_otp_api_key', '' );
+    $pattern_code  = get_option( 'nardone_otp_pattern_code', '' );
+    $from_number   = get_option( 'nardone_otp_from_number', '' );
+    $pattern_param = get_option( 'nardone_otp_pattern_param', 'otp_code' );
+    
+    // Send SMS if settings exist
+    if ( ! empty( $api_key ) && ! empty( $pattern_code ) && ! empty( $from_number ) ) {
+        $body = array(
+            'sending_type' => 'pattern',
+            'from_number'  => $from_number,
+            'code'         => $pattern_code,
+            'recipients'   => array( $phone ),
+            'params'       => array( $pattern_param => $otp_code ),
+        );
+        
+        $response = wp_remote_post( 'https://edge.ippanel.com/v1/api/send', array(
+            'headers' => array(
+                'Authorization' => $api_key,
+                'Content-Type'  => 'application/json',
+            ),
+            'body'    => wp_json_encode( $body ),
+            'timeout' => 15,
         ) );
-    }
-
-    $status_code = wp_remote_retrieve_response_code( $response );
-    $resp_body   = wp_remote_retrieve_body( $response );
-    $resp_json   = json_decode( $resp_body, true );
-
-    if ( $status_code < 200 || $status_code >= 300 ) {
-        $msg = __( 'SMS sending failed.', 'nardone' );
-        if ( is_array( $resp_json ) && ! empty( $resp_json['message'] ) ) {
-            $msg .= ' ' . $resp_json['message'];
+        
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( array( 'message' => 'خطا در ارسال پیامک' ) );
         }
-
-        wp_send_json_error( array(
-            'message' => $msg,
-        ) );
+        
+        $status = wp_remote_retrieve_response_code( $response );
+        if ( $status < 200 || $status >= 300 ) {
+            wp_send_json_error( array( 'message' => 'خطا در سرویس پیامک' ) );
+        }
     }
-
-    wp_send_json_success( array(
-        'message' => __( 'Verification code sent successfully.', 'nardone' ),
-    ) );
+    
+    wp_send_json_success( array( 'message' => 'کد تأیید ارسال شد' ) );
 }
-add_action( 'wp_ajax_nardone_send_otp',        'nardone_send_otp_ajax' );
+add_action( 'wp_ajax_nardone_send_otp', 'nardone_send_otp_ajax' );
 add_action( 'wp_ajax_nopriv_nardone_send_otp', 'nardone_send_otp_ajax' );

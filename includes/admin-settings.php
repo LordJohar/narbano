@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function nardone_add_settings_page() {
     add_options_page(
-        __( 'Nardone OTP Settings', 'nardone' ),
+        'تنظیمات Nardone OTP',
         'Nardone OTP',
         'manage_options',
         'nardone-otp-settings',
@@ -28,71 +28,73 @@ function nardone_render_settings_page() {
     if ( ! current_user_can( 'manage_options' ) ) {
         return;
     }
-
+    
+    // Save settings
     if ( isset( $_POST['nardone_otp_save_settings'] ) ) {
         check_admin_referer( 'nardone_otp_save_settings_nonce' );
-
-        $api_key       = isset( $_POST['nardone_otp_api_key'] ) ? trim( wp_unslash( $_POST['nardone_otp_api_key'] ) ) : '';
-        $pattern_code  = isset( $_POST['nardone_otp_pattern_code'] ) ? trim( wp_unslash( $_POST['nardone_otp_pattern_code'] ) ) : '';
-        $from_number   = isset( $_POST['nardone_otp_from_number'] ) ? trim( wp_unslash( $_POST['nardone_otp_from_number'] ) ) : '';
-        $pattern_param = isset( $_POST['nardone_otp_pattern_param'] ) ? trim( wp_unslash( $_POST['nardone_otp_pattern_param'] ) ) : '';
-
-        update_option( NARDONE_OPT_API_KEY,       sanitize_text_field( $api_key ) );
-        update_option( NARDONE_OPT_PATTERN_CODE,  sanitize_text_field( $pattern_code ) );
-        update_option( NARDONE_OPT_FROM_NUMBER,   sanitize_text_field( $from_number ) );
-        update_option( NARDONE_OPT_PATTERN_PARAM, sanitize_key( $pattern_param ?: 'otp_code' ) );
-
-        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'nardone' ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        
+        update_option( 'nardone_otp_api_key', sanitize_text_field( $_POST['nardone_otp_api_key'] ?? '' ) );
+        update_option( 'nardone_otp_pattern_code', sanitize_text_field( $_POST['nardone_otp_pattern_code'] ?? '' ) );
+        update_option( 'nardone_otp_from_number', sanitize_text_field( $_POST['nardone_otp_from_number'] ?? '' ) );
+        update_option( 'nardone_otp_pattern_param', sanitize_text_field( $_POST['nardone_otp_pattern_param'] ?? 'otp_code' ) );
+        
+        echo '<div class="notice notice-success"><p>تنظیمات ذخیره شد.</p></div>';
     }
-
-    $api_key       = get_option( NARDONE_OPT_API_KEY, '' );
-    $pattern_code  = get_option( NARDONE_OPT_PATTERN_CODE, '' );
-    $from_number   = get_option( NARDONE_OPT_FROM_NUMBER, '' );
-    $pattern_param = get_option( NARDONE_OPT_PATTERN_PARAM, 'otp_code' );
+    
+    // Get current values
+    $api_key       = get_option( 'nardone_otp_api_key', '' );
+    $pattern_code  = get_option( 'nardone_otp_pattern_code', '' );
+    $from_number   = get_option( 'nardone_otp_from_number', '' );
+    $pattern_param = get_option( 'nardone_otp_pattern_param', 'otp_code' );
     ?>
+    
     <div class="wrap">
-        <h1><?php esc_html_e( 'Nardone OTP Settings', 'nardone' ); ?></h1>
+        <h1>تنظیمات Nardone OTP</h1>
         <form method="post">
             <?php wp_nonce_field( 'nardone_otp_save_settings_nonce' ); ?>
-
-            <table class="form-table" role="presentation">
-                <tbody>
-                    <tr>
-                        <th scope="row"><label for="nardone_otp_api_key">API Key</label></th>
-                        <td>
-                            <input type="text" id="nardone_otp_api_key" name="nardone_otp_api_key" class="regular-text" value="<?php echo esc_attr( $api_key ); ?>" />
-                            <p class="description"><?php esc_html_e( 'API key provided by IPPanel (Authorization header).', 'nardone' ); ?></p>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th scope="row"><label for="nardone_otp_pattern_code">Pattern Code</label></th>
-                        <td>
-                            <input type="text" id="nardone_otp_pattern_code" name="nardone_otp_pattern_code" class="regular-text" value="<?php echo esc_attr( $pattern_code ); ?>" />
-                            <p class="description"><?php esc_html_e( 'Pattern code created in IPPanel (e.g., zvtfo5o4badaang).', 'nardone' ); ?></p>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th scope="row"><label for="nardone_otp_from_number"><?php esc_html_e( 'Sender number', 'nardone' ); ?></label></th>
-                        <td>
-                            <input type="text" id="nardone_otp_from_number" name="nardone_otp_from_number" class="regular-text" value="<?php echo esc_attr( $from_number ); ?>" />
-                            <p class="description"><?php esc_html_e( 'Example: +983000505', 'nardone' ); ?></p>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th scope="row"><label for="nardone_otp_pattern_param"><?php esc_html_e( 'Pattern variable name', 'nardone' ); ?></label></th>
-                        <td>
-                            <input type="text" id="nardone_otp_pattern_param" name="nardone_otp_pattern_param" class="regular-text" value="<?php echo esc_attr( $pattern_param ); ?>" />
-                            <p class="description"><?php esc_html_e( 'Variable name used inside the pattern text (e.g., otp_code). OTP value is sent in this field.', 'nardone' ); ?></p>
-                        </td>
-                    </tr>
-                </tbody>
+            
+            <table class="form-table">
+                <tr>
+                    <th><label for="nardone_otp_api_key">API Key</label></th>
+                    <td>
+                        <input type="text" id="nardone_otp_api_key" name="nardone_otp_api_key" 
+                               class="regular-text" value="<?php echo esc_attr( $api_key ); ?>" />
+                        <p class="description">کلید API از IPPanel</p>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <th><label for="nardone_otp_pattern_code">Pattern Code</label></th>
+                    <td>
+                        <input type="text" id="nardone_otp_pattern_code" name="nardone_otp_pattern_code" 
+                               class="regular-text" value="<?php echo esc_attr( $pattern_code ); ?>" />
+                        <p class="description">کد پترن از IPPanel</p>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <th><label for="nardone_otp_from_number">شماره فرستنده</label></th>
+                    <td>
+                        <input type="text" id="nardone_otp_from_number" name="nardone_otp_from_number" 
+                               class="regular-text" value="<?php echo esc_attr( $from_number ); ?>" />
+                        <p class="description">مثال: +983000505</p>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <th><label for="nardone_otp_pattern_param">نام متغیر پترن</label></th>
+                    <td>
+                        <input type="text" id="nardone_otp_pattern_param" name="nardone_otp_pattern_param" 
+                               class="regular-text" value="<?php echo esc_attr( $pattern_param ); ?>" />
+                        <p class="description">مثال: otp_code</p>
+                    </td>
+                </tr>
             </table>
-
+            
             <p class="submit">
-                <button type="submit" name="nardone_otp_save_settings" class="button button-primary"><?php esc_html_e( 'Save changes', 'nardone' ); ?></button>
+                <button type="submit" name="nardone_otp_save_settings" class="button button-primary">
+                    ذخیره تغییرات
+                </button>
             </p>
         </form>
     </div>

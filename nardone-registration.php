@@ -1,27 +1,43 @@
 <?php
 /**
- * Plugin Name: Nardone Registration
+ * Plugin Name: Nardone Registration - Enhanced Version
  * Description: User registration via mobile, OTP, and username for WooCommerce.
- * Author: Lord Johar
- * Version: 0.3.1
+ * Author: lord johar
+ * Version: 0.4.1
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
     exit; // Prevent direct access
 }
 
-define( 'NARDONE_PLUGIN_VERSION', '0.3.1' );
-define( 'NARDONE_PLUGIN_FILE', __FILE__ );
-define( 'NARDONE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'NARDONE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+// Basic constants
+define('NARDONE_PLUGIN_VERSION', '0.5.0');
+define('NARDONE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('NARDONE_OTP_EXPIRY', 3 * MINUTE_IN_SECONDS);
 
-require_once NARDONE_PLUGIN_DIR . 'includes/constants.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/helpers.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/dependencies.php';
+// Include core files
+require_once NARDONE_PLUGIN_DIR . 'includes/core-functions.php';
+require_once NARDONE_PLUGIN_DIR . 'includes/registration-handler.php';
+require_once NARDONE_PLUGIN_DIR . 'includes/login-handler.php';
+require_once NARDONE_PLUGIN_DIR . 'includes/checkout-redirect.php'; // New
+require_once NARDONE_PLUGIN_DIR . 'includes/checkout-handler.php';
+require_once NARDONE_PLUGIN_DIR . 'includes/checkout-login.php'; // New
 require_once NARDONE_PLUGIN_DIR . 'includes/admin-settings.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/registration-form.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/customer-data.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/validation.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/frontend-scripts.php';
+require_once NARDONE_PLUGIN_DIR . 'includes/frontend-assets.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/ajax-otp.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/password-policy.php';
+
+// Initialize plugin
+add_action('plugins_loaded', 'nardone_plugin_init');
+function nardone_plugin_init() {
+    // Check if WooCommerce is active
+    if (!class_exists('WooCommerce')) {
+        add_action('admin_notices', 'nardone_woocommerce_notice');
+        return;
+    }
+}
+
+function nardone_woocommerce_notice() {
+    echo '<div class="notice notice-error"><p>';
+    echo 'افزونه Nardone Registration نیاز به ووکامرس فعال دارد.';
+    echo '</p></div>';
+}
