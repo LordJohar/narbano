@@ -29,8 +29,8 @@ function nardone_add_registration_fields() {
 
     <p class="form-row form-row-wide">
         <label for="reg_nardone_otp_code"><?php esc_html_e( 'Verification code (OTP)', 'nardone' ); ?>&nbsp;<span class="required">*</span></label>
-        <div style="display:flex; gap:8px; align-items:center;">
-            <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" style="flex:1;" />
+        <div class="nardone-otp-row">
+            <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" />
             <button type="button" class="button" id="nardone_send_otp_btn">
                 <?php esc_html_e( 'دریافت کد', 'nardone' ); ?>
             </button>
@@ -55,12 +55,17 @@ function nardone_hide_email_field_css() {
         }
         
         /* OTP Input and Button in Row */
-        #reg_nardone_otp_code {
+        .nardone-otp-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .nardone-otp-row #reg_nardone_otp_code {
             width: auto !important;
             flex: 1 1 auto;
+            min-width: 0;
         }
-        
-        #nardone_send_otp_btn {
+        .nardone-otp-row #nardone_send_otp_btn {
             white-space: nowrap;
             padding: 10px 20px;
             height: 40px;
