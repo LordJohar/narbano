@@ -53,6 +53,19 @@ function nardone_hide_email_field_css() {
         .woocommerce form.register p.form-row-wide input#reg_email {
             display: none !important;
         }
+        
+        /* OTP Input and Button in Row */
+        #reg_nardone_otp_code {
+            width: auto !important;
+            flex: 1 1 auto;
+        }
+        
+        #nardone_send_otp_btn {
+            white-space: nowrap;
+            padding: 10px 20px;
+            height: 40px;
+            flex-shrink: 0;
+        }
         </style>';
     }
 }
