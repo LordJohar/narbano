@@ -29,10 +29,12 @@ function nardone_add_registration_fields() {
 
     <p class="form-row form-row-wide">
         <label for="reg_nardone_otp_code"><?php esc_html_e( 'Verification code (OTP)', 'nardone' ); ?>&nbsp;<span class="required">*</span></label>
-        <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" />
-        <button type="button" class="button" id="nardone_send_otp_btn" style="margin-top:8px;">
-            <?php esc_html_e( 'Send verification code to mobile', 'nardone' ); ?>
-        </button>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" style="flex:1;" />
+            <button type="button" class="button" id="nardone_send_otp_btn">
+                <?php esc_html_e( 'دریافت کد', 'nardone' ); ?>
+            </button>
+        </div>
         <small class="description"><?php esc_html_e( 'After you receive the code, enter it above.', 'nardone' ); ?></small>
     </p>
 
