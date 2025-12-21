@@ -104,6 +104,39 @@ function nardone_hide_email_password_field_css() {
 add_action( 'wp_head', 'nardone_hide_email_password_field_css' );
 
 /**
+ * Last-resort output filter: strip password field HTML from the rendered form in case theme overrides add it back.
+ */
+function nardone_strip_password_fields_from_output( $form ) {
+    // Remove common password input patterns.
+    $patterns = array(
+        '/<p[^>]*class="[^"]*form-row[^>]*">[^<]*<label[^>]*for="reg_password"[^>]*>.*?<\/label>.*?<input[^>]*id="reg_password"[^>]*>.*?<\/p>/is',
+        '/<p[^>]*class="[^"]*form-row[^>]*">[^<]*<label[^>]*for="reg_password2"[^>]*>.*?<\/label>.*?<input[^>]*id="reg_password2"[^>]*>.*?<\/p>/is',
+        '/<label[^>]*for="reg_password"[^>]*>.*?<\/label>/is',
+        '/<input[^>]*id="reg_password"[^>]*>/is',
+        '/<label[^>]*for="reg_password2"[^>]*>.*?<\/label>/is',
+        '/<input[^>]*id="reg_password2"[^>]*>/is',
+        '/<div[^>]*class="[^"]*password[^>]*strength[^>]*">.*?<\/div>/is',
+    );
+
+    return preg_replace( $patterns, '', $form );
+}
+add_filter( 'woocommerce_register_form', 'nardone_strip_password_fields_from_output', 999 );
+
+/**
+ * Suppress rendering of any password fields via WooCommerce form_field filter (catches theme overrides).
+ */
+function nardone_filter_password_form_field( $field, $key, $args, $value ) {
+    $password_keys = array( 'account_password', 'account_password-2', 'password', 'reg_password', 'reg_password2' );
+
+    if ( in_array( $key, $password_keys, true ) ) {
+        return '';
+    }
+
+    return $field;
+}
+add_filter( 'woocommerce_form_field', 'nardone_filter_password_form_field', 9, 4 );
+
+/**
  * Remove password field from WooCommerce registration form and force auto-generated password.
  */
 function nardone_remove_password_field( $fields ) {

@@ -3,7 +3,7 @@
  * Plugin Name: Nardone Registration
  * Description: User registration via mobile, OTP, and username for WooCommerce.
  * Author: Lord Johar
- * Version: 0.4.2
+ * Version: 0.5.0
  */
 
 if (!defined('ABSPATH')) {
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Basic constants
-define('NARDONE_PLUGIN_VERSION', '0.4.2');
+define('NARDONE_PLUGIN_VERSION', '0.5.0');
 define('NARDONE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('NARDONE_OTP_EXPIRY', 3 * MINUTE_IN_SECONDS);
 

@@ -131,3 +131,8 @@ function nardone_remove_email_password_errors_on_registration( $errors, $usernam
     return $errors;
 }
 add_filter( 'woocommerce_registration_errors', 'nardone_remove_email_password_errors_on_registration', 99, 3 );
+
+/**
+ * Ensure WooCommerce always generates a password and never requires user input.
+ */
+add_filter( 'woocommerce_registration_generate_password', '__return_true', 20 );
