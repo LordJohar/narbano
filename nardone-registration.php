@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Nardone Registration - Enhanced Version
+ * Plugin Name: Nardone Registration
  * Description: User registration via mobile, OTP, and username for WooCommerce.
- * Author: lord johar
- * Version: 0.4.1
+ * Author: Lord Johar
+ * Version: 0.4.2
  */
 
 if (!defined('ABSPATH')) {
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Basic constants
-define('NARDONE_PLUGIN_VERSION', '0.5.0');
+define('NARDONE_PLUGIN_VERSION', '0.4.2');
 define('NARDONE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('NARDONE_OTP_EXPIRY', 3 * MINUTE_IN_SECONDS);
 
@@ -19,9 +19,9 @@ define('NARDONE_OTP_EXPIRY', 3 * MINUTE_IN_SECONDS);
 require_once NARDONE_PLUGIN_DIR . 'includes/core-functions.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/registration-handler.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/login-handler.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/checkout-redirect.php'; // New
+require_once NARDONE_PLUGIN_DIR . 'includes/checkout-redirect.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/checkout-handler.php';
-require_once NARDONE_PLUGIN_DIR . 'includes/checkout-login.php'; // New
+require_once NARDONE_PLUGIN_DIR . 'includes/checkout-login.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/admin-settings.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/frontend-assets.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/ajax-otp.php';
