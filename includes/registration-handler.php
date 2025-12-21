@@ -27,12 +27,16 @@ function nardone_add_registration_fields() {
         <input type="text" class="input-text" name="billing_phone" id="reg_billing_phone" value="<?php echo isset( $_POST['billing_phone'] ) ? esc_attr( wp_unslash( $_POST['billing_phone'] ) ) : ''; ?>" placeholder="مثال: 09121234567" />
     </p>
 
-    <p class="form-row form-row-wide">
+    <p class="form-row form-row-wide nardone-otp-row">
         <label for="reg_nardone_otp_code">کد تأیید (OTP)&nbsp;<span class="required">*</span></label>
-        <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" maxlength="6" />
-        <button type="button" class="button" id="nardone_send_otp_btn" style="margin-top:8px;">
-            ارسال کد تأیید
-        </button>
+
+        <span class="nardone-otp-input-wrapper">
+            <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" maxlength="6" />
+            <button type="button" class="button" id="nardone_send_otp_btn">
+                دریافت کد تأیید
+            </button>
+        </span>
+
         <small class="description">کد ۶ رقمی به موبایل شما ارسال خواهد شد</small>
     </p>
     <?php
@@ -185,12 +189,36 @@ add_action( 'woocommerce_created_customer', 'nardone_save_registration_fields', 
  */
 function nardone_hide_email_field() {
     if ( is_account_page() ) {
-        echo '<style>
+        ?>
+        <style>
+        /* مخفی کردن فیلد ایمیل */
         .woocommerce form.register p.form-row-wide label[for="reg_email"],
         .woocommerce form.register p.form-row-wide input#reg_email {
             display: none !important;
         }
-        </style>';
+
+        /* ردیف کد تأیید */
+        .woocommerce form.register .nardone-otp-input-wrapper {
+            display: flex;
+            flex-direction: row;   /* همیشه افقی، حتی در موبایل */
+            gap: 8px;
+            align-items: center;
+        }
+
+        .woocommerce form.register .nardone-otp-input-wrapper .input-text {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .woocommerce form.register #nardone_send_otp_btn {
+            flex: 0 0 auto;
+            margin-top: 0 !important;
+            width: auto !important;      /* جلوگیری از فول‌ویدث شدن در موبایل */
+            display: inline-flex !important;
+            white-space: nowrap;
+        }
+        </style>
+        <?php
     }
 }
 add_action( 'wp_head', 'nardone_hide_email_field' );
