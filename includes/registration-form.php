@@ -12,14 +12,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Placeholder function for compatibility with other hooks.
  */
 function nardone_add_registration_fields() {
-    // Fields are rendered in the custom template (templates/myaccount/form-register.php)
     return;
 }
 add_action( 'woocommerce_register_form', 'nardone_add_registration_fields' );
 
-
 /**
- * CSS for OTP form styling.
+ * CSS for OTP form styling and aggressive password field hiding.
  */
 function nardone_registration_form_css() {
     if ( is_account_page() ) {
@@ -42,13 +40,34 @@ function nardone_registration_form_css() {
             height: 40px;
             flex-shrink: 0;
         }
+        
+        /* Hide all password fields - AGGRESSIVE */
+        input[name="account_password"],
+        input[name="account_password-2"],
+        input[id*="password"],
+        input[type="password"],
+        label[for*="password"],
+        label[for*="account_password"],
+        .woocommerce-account .woocommerce-form-row--wide input[type="password"],
+        #password_strength,
+        .password-strength,
+        .woocommerce-address-fields .form-row .password-input-wrapper,
+        .woocommerce form.register .form-row input[type="password"],
+        .woocommerce form.register .form-row label[for*="password"] {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
         </style>';
     }
 }
 add_action( 'wp_head', 'nardone_registration_form_css' );
 
 /**
- * Force WooCommerce to use plugin template for registration (removes password/email fields entirely).
+ * Force WooCommerce to use plugin template for registration.
  */
 function nardone_locate_wc_template( $template, $template_name, $template_path ) {
     if ( 'myaccount/form-register.php' === $template_name ) {
@@ -65,6 +84,66 @@ function nardone_locate_wc_template( $template, $template_name, $template_path )
 add_filter( 'woocommerce_locate_template', 'nardone_locate_wc_template', 10, 3 );
 
 /**
- * Force WooCommerce to auto-generate passwords (never require user input).
+ * Force WooCommerce to auto-generate passwords.
  */
 add_filter( 'woocommerce_registration_generate_password', '__return_true' );
+
+/**
+ * Remove password field from registration form via woocommerce_registration_form_fields.
+ */
+function nardone_remove_password_from_fields( $fields ) {
+    if ( isset( $fields['account_password'] ) ) {
+        unset( $fields['account_password'] );
+    }
+    if ( isset( $fields['account_password-2'] ) ) {
+        unset( $fields['account_password-2'] );
+    }
+    return $fields;
+}
+add_filter( 'woocommerce_registration_form_fields', 'nardone_remove_password_from_fields' );
+
+/**
+ * Start output buffering to catch and filter password fields from HTML.
+ */
+function nardone_buffer_registration_form_start() {
+    if ( is_account_page() && ! is_user_logged_in() ) {
+        ob_start( 'nardone_filter_password_from_output' );
+    }
+}
+add_action( 'wp_footer', 'nardone_buffer_registration_form_start', 1 );
+
+/**
+ * Filter password fields from buffered output.
+ */
+function nardone_filter_password_from_output( $html ) {
+    // Remove password input fields by name
+    $html = preg_replace( '/<input[^>]*name=["\']account_password["\'][^>]*>/i', '', $html );
+    $html = preg_replace( '/<input[^>]*name=["\']account_password-2["\'][^>]*>/i', '', $html );
+    $html = preg_replace( '/<input[^>]*id=["\']reg_password["\'][^>]*>/i', '', $html );
+    $html = preg_replace( '/<input[^>]*id=["\']reg_password2["\'][^>]*>/i', '', $html );
+    
+    // Remove password labels
+    $html = preg_replace( '/<label[^>]*for=["\']reg_password["\'][^>]*>.*?<\/label>/is', '', $html );
+    $html = preg_replace( '/<label[^>]*for=["\']account_password["\'][^>]*>.*?<\/label>/is', '', $html );
+    $html = preg_replace( '/<label[^>]*for=["\']account_password-2["\'][^>]*>.*?<\/label>/is', '', $html );
+    
+    // Remove password strength meter
+    $html = preg_replace( '/<div[^>]*id=["\']password_strength["\'][^>]*>.*?<\/div>/is', '', $html );
+    $html = preg_replace( '/<div[^>]*class=["\']password-strength["\'][^>]*>.*?<\/div>/is', '', $html );
+    
+    // Remove password-related form rows entirely
+    $html = preg_replace( '/<p[^>]*class=["\']form-row[^"]*["\'][^>]*>[\s\n]*<label[^>]*for=["\'].*?password["\'][^>]*>.*?<\/label>.*?<\/p>/is', '', $html );
+    
+    return $html;
+}
+
+/**
+ * End output buffering.
+ */
+function nardone_buffer_registration_form_end() {
+    if ( is_account_page() && ! is_user_logged_in() ) {
+        ob_end_flush();
+    }
+}
+add_action( 'wp_footer', 'nardone_buffer_registration_form_end', 999 );
+
