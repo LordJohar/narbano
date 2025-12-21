@@ -102,3 +102,18 @@ function nardone_hide_email_password_field_css() {
     }
 }
 add_action( 'wp_head', 'nardone_hide_email_password_field_css' );
+
+/**
+ * Remove password field from WooCommerce registration form and force auto-generated password.
+ */
+function nardone_remove_password_field( $fields ) {
+    if ( isset( $fields['account_password'] ) ) {
+        unset( $fields['account_password'] );
+    }
+
+    return $fields;
+}
+add_filter( 'woocommerce_registration_form_fields', 'nardone_remove_password_field', 20, 1 );
+
+// Force WooCommerce to generate passwords automatically (no user input shown).
+add_filter( 'woocommerce_registration_generate_password', '__return_true' );

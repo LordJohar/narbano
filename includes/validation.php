@@ -108,31 +108,24 @@ add_filter( 'woocommerce_register_post', 'nardone_validate_registration_fields',
  * Remove email and password errors on registration (OTP flow requires only phone).
  */
 function nardone_remove_email_password_errors_on_registration( $errors, $username, $email ) {
+    // Remove email errors (email hidden + fake email provided server-side)
     if ( method_exists( $errors, 'remove' ) ) {
-        // Remove email errors
         $errors->remove( 'registration-error-email-required' );
         $errors->remove( 'registration-error-invalid-email' );
-        
-        // Remove password errors
+    } else {
+        unset( $errors->errors['registration-error-email-required'] );
+        unset( $errors->errors['registration-error-invalid-email'] );
+    }
+
+    // Remove password errors (password field is removed + auto-generated)
+    if ( method_exists( $errors, 'remove' ) ) {
         $errors->remove( 'registration-error-invalid-password' );
         $errors->remove( 'registration-error-password-required' );
         $errors->remove( 'registration-error-weak-password' );
     } else {
-        if ( isset( $errors->errors['registration-error-email-required'] ) ) {
-            unset( $errors->errors['registration-error-email-required'] );
-        }
-        if ( isset( $errors->errors['registration-error-invalid-email'] ) ) {
-            unset( $errors->errors['registration-error-invalid-email'] );
-        }
-        if ( isset( $errors->errors['registration-error-invalid-password'] ) ) {
-            unset( $errors->errors['registration-error-invalid-password'] );
-        }
-        if ( isset( $errors->errors['registration-error-password-required'] ) ) {
-            unset( $errors->errors['registration-error-password-required'] );
-        }
-        if ( isset( $errors->errors['registration-error-weak-password'] ) ) {
-            unset( $errors->errors['registration-error-weak-password'] );
-        }
+        unset( $errors->errors['registration-error-invalid-password'] );
+        unset( $errors->errors['registration-error-password-required'] );
+        unset( $errors->errors['registration-error-weak-password'] );
     }
 
     return $errors;
