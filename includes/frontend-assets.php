@@ -8,13 +8,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Enqueue scripts and styles
+ * Enqueue scripts and styles (OTP handling on My Account register form)
  */
 function nardone_frontend_scripts() {
+    // فقط در صفحه حساب کاربری
     if ( ! is_account_page() ) {
         return;
     }
 
+    // مطمئن شو jQuery لود شده
+    wp_enqueue_script( 'jquery' );
+
+    // یک اسکریپت خالی رجیستر می‌کنیم تا اینلاین اسکریپت را به آن بچسبانیم
     wp_register_script(
         'nardone-frontend',
         '',
@@ -24,6 +29,7 @@ function nardone_frontend_scripts() {
     );
     wp_enqueue_script( 'nardone-frontend' );
 
+    // داده‌های AJAX (آدرس admin-ajax و nonce)
     wp_localize_script(
         'nardone-frontend',
         'NardoneData',
@@ -33,9 +39,10 @@ function nardone_frontend_scripts() {
         )
     );
 
+    // جاوااسکریپت فرانت‌اند
     $script = "
     jQuery(function($) {
-        // Normalize digits function
+        // تبدیل ارقام فارسی/عربی به لاتین و حذف فاصله‌ها
         function normalizeDigits(str) {
             if (!str) return '';
             var persian = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
@@ -48,23 +55,23 @@ function nardone_frontend_scripts() {
             return str.replace(/\\s+/g, '');
         }
         
-        // Normalize inputs
+        // نرمال‌سازی ورودی‌ها هنگام blur
         $('#reg_billing_phone, #reg_nardone_otp_code, #username').on('blur', function() {
             $(this).val(normalizeDigits($(this).val()));
         });
         
-        // Move password field
+        // جابجاکردن فیلد پسورد زیر فیلد OTP
         var \$passwordRow = $('form.register #reg_password').closest('p');
-        var \$otpRow = $('form.register #reg_nardone_otp_code').closest('p');
+        var \$otpRow      = $('form.register #reg_nardone_otp_code').closest('p');
         if (\$passwordRow.length && \$otpRow.length) {
             \$passwordRow.insertAfter(\$otpRow);
         }
         
-        // OTP send button
+        // کلیک روی دکمه ارسال کد
         $('#nardone_send_otp_btn').on('click', function(e) {
             e.preventDefault();
-            var \$btn = $(this);
-            var phone = normalizeDigits($('#reg_billing_phone').val());
+            var \$btn  = $(this);
+            var phone  = normalizeDigits($('#reg_billing_phone').val());
             $('#reg_billing_phone').val(phone);
             
             if (!phone) {
@@ -73,11 +80,13 @@ function nardone_frontend_scripts() {
             }
             
             if (!/^09[0-9]{9}$/.test(phone)) {
-                alert('شماره موبایل معتبر نیست.');
+                alert('شماره موبایل معتبر نیست. مثال: 09121234567');
                 return;
             }
             
-            if (\$btn.data('sending')) return;
+            if (\$btn.data('sending')) {
+                return;
+            }
             \$btn.data('sending', true).text('در حال ارسال...').prop('disabled', true);
             
             $.ajax({
@@ -89,19 +98,32 @@ function nardone_frontend_scripts() {
                     nonce:  NardoneData.nonce,
                     phone:  phone
                 }
-            }), function(response) {
-                if (response.success) {
-                    alert('کد تأیید ارسال شد.');
+            })
+            .done(function(response) {
+                var msg;
+                if (response && response.success) {
+                    msg = (response.data && response.data.message)
+                        ? response.data.message
+                        : 'کد تأیید ارسال شد.';
                 } else {
-                    alert(response.data?.message || 'خطا در ارسال کد.');
+                    msg = (response && response.data && response.data.message)
+                        ? response.data.message
+                        : 'خطا در ارسال کد.';
                 }
-            }).fail(function() {
+                alert(msg);
+            })
+            .fail(function() {
                 alert('خطای ارتباط.');
-            }).always(function() {
-                \$btn.data('sending', false).text('ارسال کد تأیید').prop('disabled', false);
+            })
+            .always(function() {
+                \$btn.data('sending', false)
+                    .text('ارسال کد تأیید')
+                    .prop('disabled', false);
             });
         });
     });
     ";
-};
-add_action( 'wp_enqueue_scripts', 'nardone_frontend_assets' );
+
+    wp_add_inline_script( 'nardone-frontend', $script );
+}
+add_action( 'wp_enqueue_scripts', 'nardone_frontend_scripts' );
