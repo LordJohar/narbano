@@ -10,12 +10,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Enqueue scripts and styles
  */
-function nardone_frontend_assets() {
+function nardone_frontend_scripts() {
     if ( ! is_account_page() ) {
         return;
     }
-    
-    // Add inline script
+
+    wp_register_script(
+        'nardone-frontend',
+        '',
+        array( 'jquery' ),
+        null,
+        true
+    );
+    wp_enqueue_script( 'nardone-frontend' );
+
+    wp_localize_script(
+        'nardone-frontend',
+        'NardoneData',
+        array(
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+            'nonce'    => wp_create_nonce( 'nardone_send_otp' ),
+        )
+    );
+
     $script = "
     jQuery(function($) {
         // Normalize digits function
@@ -63,11 +80,16 @@ function nardone_frontend_assets() {
             if (\$btn.data('sending')) return;
             \$btn.data('sending', true).text('در حال ارسال...').prop('disabled', true);
             
-            $.post(ajaxurl, {
-                action: 'nardone_send_otp',
-                nonce: '" . wp_create_nonce( 'nardone_send_otp' ) . "',
-                phone: phone
-            }, function(response) {
+            $.ajax({
+                url: NardoneData.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'nardone_send_otp',
+                    nonce:  NardoneData.nonce,
+                    phone:  phone
+                }
+            }), function(response) {
                 if (response.success) {
                     alert('کد تأیید ارسال شد.');
                 } else {
@@ -81,7 +103,5 @@ function nardone_frontend_assets() {
         });
     });
     ";
-    
-    wp_add_inline_script( 'jquery', $script );
-}
+};
 add_action( 'wp_enqueue_scripts', 'nardone_frontend_assets' );
