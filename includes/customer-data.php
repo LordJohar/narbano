@@ -75,7 +75,7 @@ function nardone_force_fake_email_on_registration() {
         $phone_digits = (string) wp_rand( 10000000, 99999999 );
     }
 
-    $fake_email = 'u' . $phone_digits . '+' . wp_rand( 1000, 9999 ) . '@noemail.nardone';
+    $fake_email = 'u' . $phone_digits . '-' . wp_rand( 1000, 9999 ) . '@noemail.nardone';
     $fake_email = sanitize_email( $fake_email );
 
     $_POST['email']    = $fake_email;

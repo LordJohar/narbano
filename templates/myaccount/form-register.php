@@ -1,20 +1,18 @@
 <?php
 /**
  * Registration Form override for Nardone OTP flow.
- * Removes password/email fields; uses phone + OTP only. WooCommerce will auto-generate password.
+ * Phone + OTP only. Password is auto-generated server-side.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$nonce_value = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+do_action( 'woocommerce_register_form_start' );
 
 ?>
 
 <form method="post" class="woocommerce-form woocommerce-form-register register" <?php do_action( 'woocommerce_register_form_tag' ); ?> >
-
-    <?php do_action( 'woocommerce_register_form_start' ); ?>
 
     <p class="form-row form-row-first">
         <label for="reg_billing_first_name"><?php esc_html_e( 'First name', 'nardone' ); ?> <span class="required">*</span></label>
@@ -42,14 +40,12 @@ $nonce_value = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_
 
     <div class="clear"></div>
 
-    <?php do_action( 'woocommerce_register_form' ); ?>
-
     <p class="woocommerce-FormRow form-row">
         <?php wp_nonce_field( 'woocommerce-register', '_wpnonce', false ); ?>
         <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) ); ?>" />
         <button type="submit" class="woocommerce-Button button" name="register" value="<?php esc_attr_e( 'Register', 'nardone' ); ?>"><?php esc_html_e( 'Register', 'nardone' ); ?></button>
     </p>
 
-    <?php do_action( 'woocommerce_register_form_end' ); ?>
-
 </form>
+
+<?php do_action( 'woocommerce_register_form_end' ); ?>
