@@ -49,19 +49,35 @@ add_action( 'woocommerce_register_form', 'nardone_add_registration_fields' );
 function nardone_hide_email_password_field_css() {
     if ( is_account_page() ) {
         echo '<style>
-        /* Hide email field */
-        .woocommerce form.register p.form-row-wide label[for="reg_email"],
-        .woocommerce form.register p.form-row-wide input#reg_email {
+        /* Hide email field - all variations */
+        .woocommerce form.register input#reg_email,
+        .woocommerce form.register label[for="reg_email"],
+        input#reg_email,
+        label[for="reg_email"] {
             display: none !important;
         }
         
-        /* Hide password fields */
-        .woocommerce form.register p.form-row-wide label[for="reg_password"],
-        .woocommerce form.register p.form-row-wide input#reg_password,
-        .woocommerce form.register p.form-row-wide label[for="reg_password2"],
-        .woocommerce form.register p.form-row-wide input#reg_password2,
-        .woocommerce form.register #password_strength,
-        .woocommerce form.register .description {
+        /* Hide password fields - all variations */
+        .woocommerce form.register input#reg_password,
+        .woocommerce form.register input#reg_password2,
+        .woocommerce form.register label[for="reg_password"],
+        .woocommerce form.register label[for="reg_password2"],
+        input#reg_password,
+        input#reg_password2,
+        label[for="reg_password"],
+        label[for="reg_password2"],
+        #woocommerce-password-strength,
+        .woocommerce-password-strength,
+        #password_strength,
+        .password-strength {
+            display: none !important;
+        }
+        
+        /* Hide password strength meter and related elements */
+        .woocommerce form.register .form-row.form-row-wide:has(#reg_password),
+        .woocommerce form.register .form-row.form-row-wide:has(#reg_password2),
+        .woocommerce form.register .form-row:has(#reg_password),
+        .woocommerce form.register .form-row:has(#reg_password2) {
             display: none !important;
         }
         

@@ -105,12 +105,18 @@ function nardone_validate_registration_fields( $username, $email, $validation_er
 add_filter( 'woocommerce_register_post', 'nardone_validate_registration_fields', 10, 3 );
 
 /**
- * Remove email errors on registration (handled by custom fake email logic).
+ * Remove email and password errors on registration (OTP flow requires only phone).
  */
-function nardone_remove_email_errors_on_registration( $errors, $username, $email ) {
+function nardone_remove_email_password_errors_on_registration( $errors, $username, $email ) {
     if ( method_exists( $errors, 'remove' ) ) {
+        // Remove email errors
         $errors->remove( 'registration-error-email-required' );
         $errors->remove( 'registration-error-invalid-email' );
+        
+        // Remove password errors
+        $errors->remove( 'registration-error-invalid-password' );
+        $errors->remove( 'registration-error-password-required' );
+        $errors->remove( 'registration-error-weak-password' );
     } else {
         if ( isset( $errors->errors['registration-error-email-required'] ) ) {
             unset( $errors->errors['registration-error-email-required'] );
@@ -118,8 +124,17 @@ function nardone_remove_email_errors_on_registration( $errors, $username, $email
         if ( isset( $errors->errors['registration-error-invalid-email'] ) ) {
             unset( $errors->errors['registration-error-invalid-email'] );
         }
+        if ( isset( $errors->errors['registration-error-invalid-password'] ) ) {
+            unset( $errors->errors['registration-error-invalid-password'] );
+        }
+        if ( isset( $errors->errors['registration-error-password-required'] ) ) {
+            unset( $errors->errors['registration-error-password-required'] );
+        }
+        if ( isset( $errors->errors['registration-error-weak-password'] ) ) {
+            unset( $errors->errors['registration-error-weak-password'] );
+        }
     }
 
     return $errors;
 }
-add_filter( 'woocommerce_registration_errors', 'nardone_remove_email_errors_on_registration', 99, 3 );
+add_filter( 'woocommerce_registration_errors', 'nardone_remove_email_password_errors_on_registration', 99, 3 );
