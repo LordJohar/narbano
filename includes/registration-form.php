@@ -150,3 +150,20 @@ add_filter( 'woocommerce_registration_form_fields', 'nardone_remove_password_fie
 
 // Force WooCommerce to generate passwords automatically (no user input shown).
 add_filter( 'woocommerce_registration_generate_password', '__return_true' );
+
+/**
+ * Force WooCommerce to use plugin template for registration (removes password/email fields entirely).
+ */
+function nardone_locate_wc_template( $template, $template_name, $template_path ) {
+    if ( 'myaccount/form-register.php' === $template_name ) {
+        $plugin_path = trailingslashit( NARDONE_PLUGIN_DIR . 'templates' );
+        $candidate   = $plugin_path . $template_name;
+
+        if ( file_exists( $candidate ) ) {
+            return $candidate;
+        }
+    }
+
+    return $template;
+}
+add_filter( 'woocommerce_locate_template', 'nardone_locate_wc_template', 10, 3 );

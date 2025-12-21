@@ -1,7 +1,7 @@
 # Nardone Registration Plugin - AI Coding Instructions
 
 ## Project Overview
-**Nardone** is a WordPress plugin enabling WooCommerce registration via mobile number + OTP verification through the **IPPanel SMS gateway**. Version: 0.4.2+. The plugin is **modular** with clear concerns separation across `includes/` files. All Persian/Arabic digit handling is normalized to Latin numerals throughout. Architecture spans registration flow (account page), login helpers, and checkout UX improvements.
+**Nardone** is a WordPress plugin enabling WooCommerce registration via mobile number + OTP verification through the **IPPanel SMS gateway**. Version: 0.5.0. The plugin is **modular** with clear concerns separation across `includes/` files. All Persian/Arabic digit handling is normalized to Latin numerals throughout. Architecture spans registration flow (account page), login helpers, and checkout UX improvements.
 
 ## Architecture & Data Flow
 
