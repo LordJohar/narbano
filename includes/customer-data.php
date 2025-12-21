@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Customize new customer data: auto username and fake email when missing.
+ * Customize new customer data: auto username, fake email, and auto-generated password.
  *
  * @param array $data WooCommerce new customer data.
  * @return array
@@ -26,6 +26,11 @@ function nardone_customize_new_customer_data( $data ) {
 
         $fake_email         = 'u' . $phone_digits . '-' . wp_rand( 1000, 9999 ) . '@noemail.nardone';
         $data['user_email'] = sanitize_email( $fake_email );
+    }
+
+    // Auto-generate a strong random password since registration doesn't require user input
+    if ( empty( $data['user_pass'] ) ) {
+        $data['user_pass'] = wp_generate_password( 16, true, true );
     }
 
     return $data;

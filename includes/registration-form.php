@@ -44,13 +44,24 @@ function nardone_add_registration_fields() {
 add_action( 'woocommerce_register_form', 'nardone_add_registration_fields' );
 
 /**
- * Hide email field on My Account registration form (username/OTP flow uses phone).
+ * Hide email and password fields on My Account registration form (OTP flow uses phone).
  */
-function nardone_hide_email_field_css() {
+function nardone_hide_email_password_field_css() {
     if ( is_account_page() ) {
         echo '<style>
+        /* Hide email field */
         .woocommerce form.register p.form-row-wide label[for="reg_email"],
         .woocommerce form.register p.form-row-wide input#reg_email {
+            display: none !important;
+        }
+        
+        /* Hide password fields */
+        .woocommerce form.register p.form-row-wide label[for="reg_password"],
+        .woocommerce form.register p.form-row-wide input#reg_password,
+        .woocommerce form.register p.form-row-wide label[for="reg_password2"],
+        .woocommerce form.register p.form-row-wide input#reg_password2,
+        .woocommerce form.register #password_strength,
+        .woocommerce form.register .description {
             display: none !important;
         }
         
@@ -74,4 +85,4 @@ function nardone_hide_email_field_css() {
         </style>';
     }
 }
-add_action( 'wp_head', 'nardone_hide_email_field_css' );
+add_action( 'wp_head', 'nardone_hide_email_password_field_css' );
