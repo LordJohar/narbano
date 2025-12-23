@@ -12,7 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Placeholder function for compatibility with other hooks.
  */
 function nardone_add_registration_fields() {
-    return;
+    // No extra fields here because the custom template renders all fields.
+    // Placeholder kept for compatibility; do not remove.
 }
 add_action( 'woocommerce_register_form', 'nardone_add_registration_fields' );
 
@@ -27,7 +28,24 @@ function nardone_registration_form_css() {
             display: flex;
             gap: 8px;
             align-items: center;
-            width: 100%;
+            width: 100% !important;
+            max-width: 100% !important;
+            flex-wrap: nowrap;
+        }
+        .nardone-otp-row input.input-text,
+        .nardone-otp-row button {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .woocommerce-form-register .form-row,
+        .woocommerce-form-register .form-row-wide {
+            width: 100% !important;
+            max-width: 100% !important;
+            float: none !important;
+        }
+        .woocommerce-form-register .form-row-wide .input-text,
+        .woocommerce-form-register .form-row .input-text {
+            width: 100% !important;
         }
         .nardone-otp-row #reg_nardone_otp_code {
             width: auto !important;
@@ -39,6 +57,12 @@ function nardone_registration_form_css() {
             padding: 10px 20px;
             height: 40px;
             flex-shrink: 0;
+        }
+        /* Make OTP form row span full width */
+        .woocommerce-form-register .form-row-wide {
+            width: 100% !important;
+            max-width: 100% !important;
+            clear: both;
         }
         
         /* Hide all password fields - AGGRESSIVE */

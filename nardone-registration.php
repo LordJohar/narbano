@@ -17,6 +17,7 @@ define('NARDONE_OTP_EXPIRY', 3 * MINUTE_IN_SECONDS);
 
 // Include core files
 require_once NARDONE_PLUGIN_DIR . 'includes/core-functions.php';
+require_once NARDONE_PLUGIN_DIR . 'includes/registration-form.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/registration-handler.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/login-handler.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/checkout-redirect.php';

@@ -106,6 +106,23 @@ function nardone_save_registration_fields( $customer_id ) {
         update_user_meta( $customer_id, 'billing_phone', $phone );
     }
 
+    // Optional referrer data.
+    $ref_phone_norm = isset( $_POST['nardone_referrer_phone_norm'] ) ? nardone_normalize_phone_digits( $_POST['nardone_referrer_phone_norm'] ) : '';
+    $ref_user_id    = isset( $_POST['nardone_referrer_user_id'] ) ? absint( $_POST['nardone_referrer_user_id'] ) : 0;
+    $ref_name_mask  = isset( $_POST['nardone_referrer_name_mask'] ) ? sanitize_text_field( wp_unslash( $_POST['nardone_referrer_name_mask'] ) ) : '';
+
+    if ( ! empty( $ref_phone_norm ) ) {
+        update_user_meta( $customer_id, 'nardone_referrer_phone', $ref_phone_norm );
+    }
+
+    if ( $ref_user_id > 0 ) {
+        update_user_meta( $customer_id, 'nardone_referrer_user', $ref_user_id );
+    }
+
+    if ( ! empty( $ref_name_mask ) ) {
+        update_user_meta( $customer_id, 'nardone_referrer_name_mask', $ref_name_mask );
+    }
+
     // Mark phone as verified after successful OTP.
     update_user_meta( $customer_id, 'nardone_mobile_verified', 1 );
 }

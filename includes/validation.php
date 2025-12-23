@@ -16,9 +16,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return WP_Error
  */
 function nardone_validate_registration_fields( $username, $email, $validation_errors ) {
-    $phone = null;
+    $phone               = null;
+    $referrer_phone      = null;
+    $referrer_user       = null;
+    $referrer_name_mask  = '';
+    $referrer_warn       = '';
+
     if ( ! empty( $_POST['billing_phone'] ) ) {
         $phone = nardone_normalize_phone_digits( $_POST['billing_phone'] );
+    }
+
+    if ( ! empty( $_POST['nardone_referrer_phone'] ) ) {
+        $referrer_phone = nardone_normalize_phone_digits( $_POST['nardone_referrer_phone'] );
     }
 
     // Remove email-related errors added by WooCommerce.
@@ -63,6 +72,22 @@ function nardone_validate_registration_fields( $username, $email, $validation_er
         }
     }
 
+    // Optional referrer phone (soft validation).
+    if ( ! empty( $referrer_phone ) ) {
+        if ( ! preg_match( '/^09[0-9]{9}$/', $referrer_phone ) ) {
+            $validation_errors->add( 'nardone_referrer_phone_format', __( 'Referrer mobile is invalid. Example: 09121234567', 'nardone' ) );
+        } else {
+            $ref_user = nardone_find_user_by_billing_phone( $referrer_phone );
+            if ( $ref_user instanceof WP_User ) {
+                $referrer_user      = $ref_user;
+                $referrer_name_mask = nardone_mask_user_name( $ref_user );
+            } else {
+                // Soft warning only; do not block registration.
+                $referrer_warn = __( 'Referrer not found. You can continue without it.', 'nardone' );
+            }
+        }
+    }
+
     // OTP.
     if ( empty( $_POST['nardone_otp_code'] ) ) {
         $validation_errors->add( 'nardone_otp_code_error', __( 'Please enter the verification code (OTP).', 'nardone' ) );
@@ -98,6 +123,20 @@ function nardone_validate_registration_fields( $username, $email, $validation_er
                 $validation_errors->add( 'nardone_otp_no_phone', __( 'Enter a valid mobile number first.', 'nardone' ) );
             }
         }
+    }
+
+    // Surface soft warning if no blocking errors.
+    if ( $referrer_warn && empty( $validation_errors->errors ) ) {
+        $validation_errors->add( 'nardone_referrer_warning', $referrer_warn );
+    }
+
+    // Stash referrer lookup results for later saving.
+    if ( $referrer_user instanceof WP_User ) {
+        $_POST['nardone_referrer_user_id']    = $referrer_user->ID;
+        $_POST['nardone_referrer_name_mask']  = $referrer_name_mask;
+        $_POST['nardone_referrer_phone_norm'] = $referrer_phone;
+    } elseif ( ! empty( $referrer_phone ) ) {
+        $_POST['nardone_referrer_phone_norm'] = $referrer_phone;
     }
 
     return $validation_errors;

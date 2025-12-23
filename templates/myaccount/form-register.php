@@ -30,6 +30,12 @@ do_action( 'woocommerce_register_form_start' );
     </p>
 
     <p class="form-row form-row-wide">
+        <label for="reg_nardone_referrer_phone"><?php esc_html_e( 'Referrer mobile (optional)', 'nardone' ); ?></label>
+        <input type="text" class="input-text" name="nardone_referrer_phone" id="reg_nardone_referrer_phone" autocomplete="tel" placeholder="09121234567" value="<?php echo isset( $_POST['nardone_referrer_phone'] ) ? esc_attr( wp_unslash( $_POST['nardone_referrer_phone'] ) ) : ''; ?>" />
+        <small class="description"><?php esc_html_e( 'If someone referred you, enter their mobile number. We will show their masked name (e.g., م.پناهی). Leave empty if none.', 'nardone' ); ?></small>
+    </p>
+
+    <p class="form-row form-row-wide">
         <div class="nardone-otp-row">
             <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" autocomplete="one-time-code" placeholder="<?php esc_attr_e( 'کد تأیید', 'nardone' ); ?>" />
             <button type="button" class="button" id="nardone_send_otp_btn"><?php esc_html_e( 'دریافت کد', 'nardone' ); ?></button>

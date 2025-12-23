@@ -34,12 +34,12 @@ function nardone_render_otp_login_ui() {
             <p class="form-row form-row-wide">
                 <div class="nardone-otp-row">
                     <input type="text" class="input-text" name="nardone_login_otp_code" id="nardone_login_otp_code" placeholder="123456" inputmode="numeric" />
-                    <button type="button" class="button" id="nardone_login_send_otp_btn"><?php esc_html_e( 'ارسال کد', 'nardone' ); ?></button>
+                    <button type="button" class="button" id="nardone_login_send_otp_btn"><?php esc_html_e( 'دریافت کد', 'nardone' ); ?></button>
                 </div>
             </p>
 
             <p class="form-row">
-                <button type="submit" class="button button-primary" id="nardone_login_submit_btn">
+                <button type="submit" class="button button-primary nardone-login-submit" id="nardone_login_submit_btn">
                     <?php esc_html_e( 'ورود', 'nardone' ); ?>
                 </button>
             </p>
@@ -53,6 +53,8 @@ function nardone_render_otp_login_ui() {
         .woocommerce form.login,
         .woocommerce .woocommerce-form-login,
         .woocommerce .login-form-footer { display: none !important; }
+        /* Keep register form visible when needed */
+        .woocommerce .woocommerce-form-register { display: block !important; }
 
         /* Hide theme-provided login heading inside the default login column to prevent duplicate titles */
         .col-login .wd-login-title { display: none !important; }
@@ -91,12 +93,39 @@ function nardone_render_otp_login_ui() {
         .nardone-otp-row {
             display: flex;
             gap: 8px;
+            width: 100% !important;
+            max-width: 100% !important;
+            align-items: stretch;
         }
-        .nardone-otp-row input { flex: 1; }
+        .nardone-otp-row input.input-text {
+            width: 100% !important;
+        }
+        .nardone-otp-row input {
+            flex: 1 1 auto;
+            min-width: 0;
+            width: 100%;
+        }
+        .nardone-otp-row button {
+            flex: 0 0 auto;
+            padding-left: 16px;
+            padding-right: 16px;
+            background: var(--btn-accented-bgcolor, #96588a);
+            border-color: var(--btn-accented-bgcolor, #96588a);
+            color: #fff;
+            white-space: nowrap;
+            border-radius: 4px;
+        }
         .nardone-message {
             padding: 10px;
             margin: 10px 0;
             border-radius: 3px;
+        }
+        .nardone-login-submit {
+            width: 100%;
+            background: var(--btn-accented-bgcolor, #96588a);
+            border-color: var(--btn-accented-bgcolor, #96588a);
+            color: #fff;
+            border-radius: 4px;
         }
         .nardone-message.error {
             background: #fee;
@@ -228,6 +257,10 @@ function nardone_render_otp_login_ui() {
         var $loginBox = $('.nardone-otp-login-container');
         var $registerForm = $('.woocommerce-form-register');
         var $registerInfo = $('.wd-registration-page.wd-register-tabs.with-login-reg-info');
+        var $registerWrapper = $registerForm.closest('.col-register, .u-column2, .wd-registration-page, .wd-register-tabs');
+        if (!$registerWrapper.length) {
+            $registerWrapper = $registerForm.parent();
+        }
 
         if ($loginBox.length && $registerForm.length) {
             var $tabs = $('<div class="nardone-auth-tabs" />');
@@ -243,6 +276,7 @@ function nardone_render_otp_login_ui() {
                 $tabRegister.removeClass('is-active');
                 $loginBox.show();
                 $registerForm.hide();
+                if ($registerWrapper.length) { $registerWrapper.hide(); }
                 if ($registerInfo.length) { $registerInfo.hide(); }
             }
 
@@ -251,6 +285,7 @@ function nardone_render_otp_login_ui() {
                 $tabLogin.removeClass('is-active');
                 $loginBox.hide();
                 $registerForm.show();
+                if ($registerWrapper.length) { $registerWrapper.show(); }
                 if ($registerInfo.length) { $registerInfo.show(); }
             }
 

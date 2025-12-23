@@ -69,3 +69,73 @@ function nardone_mobile_exists( $phone ) {
     
     return ! empty( $users );
 }
+
+/**
+ * Find a user by billing phone (normalized).
+ *
+ * @param string $phone Raw or normalized phone.
+ * @return WP_User|null
+ */
+function nardone_find_user_by_billing_phone( $phone ) {
+    $phone = nardone_normalize_phone_digits( $phone );
+
+    if ( empty( $phone ) ) {
+        return null;
+    }
+
+    $users = get_users( array(
+        'meta_key'   => 'billing_phone',
+        'meta_value' => $phone,
+        'number'     => 1,
+        'fields'     => 'all',
+    ) );
+
+    if ( empty( $users ) || ! isset( $users[0] ) ) {
+        return null;
+    }
+
+    return $users[0];
+}
+
+/**
+ * Mask a user's name as "F.Family" (first char of first name + "." + last name).
+ * Falls back to display_name when names are missing.
+ *
+ * @param WP_User $user
+ * @return string
+ */
+function nardone_mask_user_name( $user ) {
+    if ( ! $user instanceof WP_User ) {
+        return '';
+    }
+
+    $first = get_user_meta( $user->ID, 'first_name', true );
+    $last  = get_user_meta( $user->ID, 'last_name', true );
+
+    // Fallback to display_name if names are empty.
+    if ( empty( $first ) && empty( $last ) ) {
+        return $user->display_name ?: '';
+    }
+
+    $first_char = '';
+
+    if ( ! empty( $first ) ) {
+        if ( function_exists( 'mb_substr' ) ) {
+            $first_char = mb_substr( $first, 0, 1 );
+        } else {
+            $first_char = substr( $first, 0, 1 );
+        }
+    }
+
+    $parts = array();
+
+    if ( ! empty( $first_char ) ) {
+        $parts[] = $first_char . '.';
+    }
+
+    if ( ! empty( $last ) ) {
+        $parts[] = $last;
+    }
+
+    return trim( implode( '', $parts ) );
+}
