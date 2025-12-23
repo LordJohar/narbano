@@ -35,6 +35,16 @@ function nardone_add_registration_fields() {
             </button>
         </span>
     </p>
+
+    <p class="form-row form-row-wide nardone-ref-toggle-row">
+        <a href="#" class="nardone-ref-toggle"><?php esc_html_e( 'I have a referrer', 'nardone' ); ?></a>
+    </p>
+
+    <div class="form-row form-row-wide nardone-referrer-field" style="display:none;">
+        <label for="reg_nardone_referrer_phone"><?php esc_html_e( 'Referrer mobile (optional)', 'nardone' ); ?></label>
+        <input type="text" class="input-text" name="nardone_referrer_phone" id="reg_nardone_referrer_phone" value="<?php echo isset( $_POST['nardone_referrer_phone'] ) ? esc_attr( wp_unslash( $_POST['nardone_referrer_phone'] ) ) : ''; ?>" placeholder="09121234567" />
+        <small class="description"><?php esc_html_e( 'If someone referred you, enter their mobile number. Leave empty if none.', 'nardone' ); ?></small>
+    </div>
     <?php
 }
 add_action( 'woocommerce_register_form', 'nardone_add_registration_fields' );

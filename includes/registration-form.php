@@ -55,6 +55,12 @@ function nardone_registration_form_css() {
             max-width: 100% !important;
             clear: both;
         }
+
+        /* Referrer toggle */
+        .nardone-ref-toggle-row { margin-top: 0; }
+        .nardone-ref-toggle { display: inline-block; margin-bottom: 6px; }
+        .nardone-referrer-field { display: none; }
+        .nardone-referrer-field.is-visible { display: block; }
         
         /* Hide all password fields - AGGRESSIVE */
         input[name="account_password"],

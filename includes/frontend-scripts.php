@@ -125,6 +125,22 @@ function nardone_frontend_scripts() {
             });
         });
 
+        // Referrer toggle
+        var $refToggle = $form.find('.nardone-ref-toggle');
+        var $refField  = $form.find('.nardone-referrer-field');
+
+        $refToggle.on('click', function(e) {
+            e.preventDefault();
+            $refField.toggleClass('is-visible');
+            if ($refField.hasClass('is-visible')) {
+                $refField.slideDown(200);
+            } else {
+                $refField.slideUp(200);
+                // Clear value when hiding
+                $refField.find('input').val('');
+            }
+        });
+
     });
     ";
 
