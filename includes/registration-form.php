@@ -9,15 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Placeholder function for compatibility with other hooks.
- */
-function nardone_add_registration_fields() {
-    // No extra fields here because the custom template renders all fields.
-    // Placeholder kept for compatibility; do not remove.
-}
-add_action( 'woocommerce_register_form', 'nardone_add_registration_fields' );
-
-/**
  * CSS for OTP form styling and aggressive password field hiding.
  */
 function nardone_registration_form_css() {
