@@ -22,8 +22,8 @@ function nardone_render_otp_login_ui() {
     $redirect_url  = esc_url_raw( wc_get_page_permalink( 'myaccount' ) );
     ?>
     <div class="nardone-otp-login-container">
-        <h2><?php esc_html_e( 'ورود با کد تأیید', 'nardone' ); ?></h2>
-        <p><?php esc_html_e( 'شماره موبایل خود را وارد کنید، کد پیامکی دریافت کنید و بدون رمز وارد شوید.', 'nardone' ); ?></p>
+        <h2 class="wd-login-title"><?php esc_html_e( 'ورود', 'nardone' ); ?></h2>
+        <p class="nardone-otp-login-subtitle"><?php esc_html_e( 'ورود با شماره موبایل و کد پیامکی (بدون رمز عبور)', 'nardone' ); ?></p>
 
         <form id="nardone_otp_login_form" class="nardone-otp-login-form" method="post" novalidate>
             <p class="form-row form-row-wide">
@@ -32,16 +32,15 @@ function nardone_render_otp_login_ui() {
             </p>
 
             <p class="form-row form-row-wide">
-                <label for="nardone_login_otp_code"><?php esc_html_e( 'کد تأیید پیامکی', 'nardone' ); ?> <span class="required">*</span></label>
                 <div class="nardone-otp-row">
                     <input type="text" class="input-text" name="nardone_login_otp_code" id="nardone_login_otp_code" placeholder="123456" inputmode="numeric" />
-                    <button type="button" class="button" id="nardone_login_send_otp_btn"><?php esc_html_e( 'ارسال کد', 'nardone' ); ?></button>
+                    <button type="button" class="button" id="nardone_login_send_otp_btn"><?php esc_html_e( 'دریافت کد', 'nardone' ); ?></button>
                 </div>
             </p>
 
             <p class="form-row">
                 <button type="submit" class="button button-primary" id="nardone_login_submit_btn">
-                    <?php esc_html_e( 'ورود بدون رمز', 'nardone' ); ?>
+                    <?php esc_html_e( 'ورود', 'nardone' ); ?>
                 </button>
             </p>
 
@@ -52,12 +51,16 @@ function nardone_render_otp_login_ui() {
     <style>
         /* Hide WooCommerce default login form to enforce OTP-only login */
         .woocommerce form.login { display: none !important; }
+
+        /* Ensure theme login title (wd-login-title) inherits spacing */
+        .wd-login-title { margin-top: 0; margin-bottom: 10px; }
+        .nardone-otp-login-subtitle { margin-top: 0; margin-bottom: 15px; color: #555; }
         .nardone-otp-login-container {
-            background: #f9f9f9;
+            /* background: #f9f9f9; */
             padding: 20px;
-            border-radius: 5px;
+            /* border-radius: 5px; */
             margin-bottom: 20px;
-            border: 1px solid #e5e5e5;
+            /* border: 1px solid #e5e5e5; */
         }
         .nardone-otp-row {
             display: flex;
