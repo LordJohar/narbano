@@ -30,12 +30,10 @@ do_action( 'woocommerce_register_form_start' );
     </p>
 
     <p class="form-row form-row-wide">
-        <label for="reg_nardone_otp_code"><?php esc_html_e( 'Verification code (OTP)', 'nardone' ); ?> <span class="required">*</span></label>
         <div class="nardone-otp-row">
-            <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" autocomplete="one-time-code" />
+            <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" autocomplete="one-time-code" placeholder="<?php esc_attr_e( 'کد تأیید', 'nardone' ); ?>" />
             <button type="button" class="button" id="nardone_send_otp_btn"><?php esc_html_e( 'دریافت کد', 'nardone' ); ?></button>
         </div>
-        <small class="description"><?php esc_html_e( 'After you receive the code, enter it above.', 'nardone' ); ?></small>
     </p>
 
     <div class="clear"></div>
