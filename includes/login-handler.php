@@ -53,6 +53,9 @@ function nardone_render_otp_login_ui() {
         /* Hide WooCommerce default login form to enforce OTP-only login */
         .woocommerce form.login { display: none !important; }
 
+        /* Hide theme-provided login heading inside the default login column to prevent duplicate titles */
+        .col-login .wd-login-title { display: none !important; }
+
         .wd-login-title { margin-top: 0; margin-bottom: 10px; }
         .nardone-otp-login-subtitle { margin: 0 0 15px; color: #555; }
 
