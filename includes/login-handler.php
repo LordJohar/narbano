@@ -40,7 +40,7 @@ function nardone_render_otp_login_ui() {
 
             <p class="form-row">
                 <button type="submit" class="button button-primary" id="nardone_login_submit_btn">
-                    <?php esc_html_e( 'ورود بدون رمز', 'nardone' ); ?>
+                    <?php esc_html_e( 'ورود', 'nardone' ); ?>
                 </button>
             </p>
 
