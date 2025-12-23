@@ -28,16 +28,12 @@ function nardone_add_registration_fields() {
     </p>
 
     <p class="form-row form-row-wide nardone-otp-row">
-        <label for="reg_nardone_otp_code">کد تأیید (OTP)&nbsp;<span class="required">*</span></label>
-
         <span class="nardone-otp-input-wrapper">
             <input type="text" class="input-text" name="nardone_otp_code" id="reg_nardone_otp_code" value="" maxlength="6" />
             <button type="button" class="button" id="nardone_send_otp_btn">
                 دریافت کد تأیید
             </button>
         </span>
-
-        <small class="description">کد ۶ رقمی به موبایل شما ارسال خواهد شد</small>
     </p>
     <?php
 }

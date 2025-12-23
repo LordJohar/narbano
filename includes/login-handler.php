@@ -50,10 +50,36 @@ function nardone_render_otp_login_ui() {
 
     <style>
         /* Hide WooCommerce default login form to enforce OTP-only login */
-        .woocommerce form.login { display: none !important; }
+        .woocommerce form.login,
+        .woocommerce .woocommerce-form-login,
+        .woocommerce .login-form-footer { display: none !important; }
 
         /* Hide theme-provided login heading inside the default login column to prevent duplicate titles */
         .col-login .wd-login-title { display: none !important; }
+
+        /* Hide theme helper text block beside register column if present */
+        .col-register-text { display: none !important; }
+
+        /* Auth tabs */
+        .nardone-auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .nardone-auth-tabs button {
+            flex: 1;
+            border: 1px solid #ddd;
+            background: #f7f7f7;
+            padding: 10px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .nardone-auth-tabs button.is-active {
+            background: #96588a;
+            color: #fff;
+            border-color: #96588a;
+        }
 
         .wd-login-title { margin-top: 0; margin-bottom: 10px; }
         .nardone-otp-login-subtitle { margin: 0 0 15px; color: #555; }
@@ -197,6 +223,48 @@ function nardone_render_otp_login_ui() {
                 $submit.data('loading', false).prop('disabled', false);
             });
         });
+
+        // ----- Tabs between Login/Register -----
+        var $loginBox = $('.nardone-otp-login-container');
+        var $registerForm = $('.woocommerce-form-register');
+        var $registerInfo = $('.wd-registration-page.wd-register-tabs.with-login-reg-info');
+
+        if ($loginBox.length && $registerForm.length) {
+            var $tabs = $('<div class="nardone-auth-tabs" />');
+            var $tabLogin = $('<button type="button" class="is-active" data-target="login" />').text(<?php echo wp_json_encode( __( 'ورود', 'nardone' ) ); ?>);
+            var $tabRegister = $('<button type="button" data-target="register" />').text(<?php echo wp_json_encode( __( 'ثبت نام', 'nardone' ) ); ?>);
+            $tabs.append($tabLogin, $tabRegister);
+
+            // Insert tabs before login container (and thus before register)
+            $loginBox.before($tabs);
+
+            function showLogin() {
+                $tabLogin.addClass('is-active');
+                $tabRegister.removeClass('is-active');
+                $loginBox.show();
+                $registerForm.hide();
+                if ($registerInfo.length) { $registerInfo.hide(); }
+            }
+
+            function showRegister() {
+                $tabRegister.addClass('is-active');
+                $tabLogin.removeClass('is-active');
+                $loginBox.hide();
+                $registerForm.show();
+                if ($registerInfo.length) { $registerInfo.show(); }
+            }
+
+            $tabLogin.on('click', function() {
+                showLogin();
+            });
+
+            $tabRegister.on('click', function() {
+                showRegister();
+            });
+
+            // Default state: show login (hide register)
+            showLogin();
+        }
     });
     </script>
     <?php
