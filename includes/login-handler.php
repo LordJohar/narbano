@@ -22,29 +22,26 @@ function nardone_render_otp_login_ui() {
     $redirect_url  = esc_url_raw( wc_get_page_permalink( 'myaccount' ) );
     ?>
     <div class="nardone-otp-login-container">
-        <h2><?php esc_html_e( 'Login with Mobile OTP', 'nardone' ); ?></h2>
-        <p><?php esc_html_e( 'Enter your phone number and receive a verification code via SMS.', 'nardone' ); ?></p>
-        
-        <form id="nardone_otp_login_form" method="post">
+        <h2 class="wd-login-title"><?php esc_html_e( 'ورود', 'nardone' ); ?></h2>
+        <p class="nardone-otp-login-subtitle"><?php esc_html_e( 'ورود با شماره موبایل و کد پیامکی (بدون رمز عبور)', 'nardone' ); ?></p>
+
+        <form id="nardone_otp_login_form" class="nardone-otp-login-form" method="post" novalidate>
             <p class="form-row form-row-wide">
                 <label for="nardone_login_phone"><?php esc_html_e( 'شماره موبایل', 'nardone' ); ?> <span class="required">*</span></label>
                 <input type="tel" class="input-text" name="nardone_login_phone" id="nardone_login_phone" placeholder="09121234567" autocomplete="tel" />
             </p>
 
             <p class="form-row form-row-wide">
-                <label for="nardone_login_otp_code"><?php esc_html_e( 'Verification code (OTP)', 'nardone' ); ?>&nbsp;<span class="required">*</span></label>
+                <label for="nardone_login_otp_code"><?php esc_html_e( 'کد تأیید پیامکی', 'nardone' ); ?> <span class="required">*</span></label>
                 <div class="nardone-otp-row">
-                    <input type="text" class="input-text" name="nardone_login_otp_code" id="nardone_login_otp_code" />
-                    <button type="button" class="button" id="nardone_login_send_otp_btn">
-                        <?php esc_html_e( 'دریافت کد', 'nardone' ); ?>
-                    </button>
+                    <input type="text" class="input-text" name="nardone_login_otp_code" id="nardone_login_otp_code" placeholder="123456" inputmode="numeric" />
+                    <button type="button" class="button" id="nardone_login_send_otp_btn"><?php esc_html_e( 'ارسال کد', 'nardone' ); ?></button>
                 </div>
             </p>
 
             <p class="form-row">
-                <?php wp_nonce_field( 'nardone_otp_login', 'nardone_otp_login_nonce' ); ?>
-                <button type="submit" class="button" name="login" value="<?php esc_attr_e( 'Login', 'nardone' ); ?>">
-                    <?php esc_html_e( 'Login', 'nardone' ); ?>
+                <button type="submit" class="button button-primary" id="nardone_login_submit_btn">
+                    <?php esc_html_e( 'ورود بدون رمز', 'nardone' ); ?>
                 </button>
             </p>
 
@@ -52,12 +49,20 @@ function nardone_render_otp_login_ui() {
         </form>
     </div>
 
-        <style>
+    <style>
+        /* Hide WooCommerce default login form to enforce OTP-only login */
+        .woocommerce form.login { display: none !important; }
+
+        .wd-login-title { margin-top: 0; margin-bottom: 10px; }
+        .nardone-otp-login-subtitle { margin: 0 0 15px; color: #555; }
+
         .nardone-otp-login-container {
-            /* background: #f9f9f9; */
             padding: 20px;
-            /* border-radius: 5px; */
             margin-bottom: 20px;
+        }
+        .nardone-otp-row {
+            display: flex;
+            gap: 8px;
         }
         .nardone-otp-row input { flex: 1; }
         .nardone-message {
