@@ -32,7 +32,6 @@ function nardone_render_otp_login_ui() {
             </p>
 
             <p class="form-row form-row-wide">
-                <label for="nardone_login_otp_code"><?php esc_html_e( 'کد تأیید پیامکی', 'nardone' ); ?> <span class="required">*</span></label>
                 <div class="nardone-otp-row">
                     <input type="text" class="input-text" name="nardone_login_otp_code" id="nardone_login_otp_code" placeholder="123456" inputmode="numeric" />
                     <button type="button" class="button" id="nardone_login_send_otp_btn"><?php esc_html_e( 'ارسال کد', 'nardone' ); ?></button>
