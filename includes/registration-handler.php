@@ -37,13 +37,18 @@ function nardone_add_registration_fields() {
     </p>
 
     <p class="form-row form-row-wide nardone-ref-toggle-row">
-        <a href="#" class="nardone-ref-toggle"><?php esc_html_e( 'I have a referrer', 'nardone' ); ?></a>
+        <button type="button" class="button nardone-ref-toggle" aria-expanded="false">
+            <?php esc_html_e( 'معرف داری؟', 'nardone' ); ?>
+        </button>
     </p>
 
     <div class="form-row form-row-wide nardone-referrer-field" style="display:none;">
-        <label for="reg_nardone_referrer_phone"><?php esc_html_e( 'Referrer mobile (optional)', 'nardone' ); ?></label>
-        <input type="text" class="input-text" name="nardone_referrer_phone" id="reg_nardone_referrer_phone" value="<?php echo isset( $_POST['nardone_referrer_phone'] ) ? esc_attr( wp_unslash( $_POST['nardone_referrer_phone'] ) ) : ''; ?>" placeholder="09121234567" />
-        <small class="description"><?php esc_html_e( 'If someone referred you, enter their mobile number. Leave empty if none.', 'nardone' ); ?></small>
+        <label for="reg_nardone_referrer_phone"><?php esc_html_e( 'شماره معرف', 'nardone' ); ?></label>
+        <div class="nardone-referrer-input-wrap">
+            <input type="text" class="input-text" name="nardone_referrer_phone" id="reg_nardone_referrer_phone" value="<?php echo isset( $_POST['nardone_referrer_phone'] ) ? esc_attr( wp_unslash( $_POST['nardone_referrer_phone'] ) ) : ''; ?>" placeholder="09121234567" />
+            <span class="nardone-referrer-status" aria-live="polite"></span>
+        </div>
+        <small class="description"><?php esc_html_e( 'شماره معرف را وارد کنید. در صورت نبود می‌توانید خالی بگذارید.', 'nardone' ); ?></small>
     </div>
     <?php
 }
@@ -226,6 +231,57 @@ function nardone_hide_email_field() {
             width: auto !important;      /* جلوگیری از فول‌ویدث شدن در موبایل */
             display: inline-flex !important;
             white-space: nowrap;
+        }
+
+        /* Referrer button & field */
+        .woocommerce form.register .nardone-ref-toggle-row {
+            text-align: right;
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+
+        .woocommerce form.register .nardone-ref-toggle {
+            background: #30b1b1;
+            border: none;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        .woocommerce form.register .nardone-ref-toggle:hover {
+            background: #279b9b;
+        }
+
+        .woocommerce form.register .nardone-ref-toggle:active {
+            transform: translateY(1px);
+        }
+
+        .woocommerce form.register .nardone-referrer-field {
+            margin-top: 10px;
+        }
+
+        .woocommerce form.register .nardone-referrer-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .woocommerce form.register .nardone-referrer-status {
+            min-width: 120px;
+            font-size: 0.9em;
+            color: #444;
+        }
+
+        .woocommerce form.register .nardone-referrer-status.is-success {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .woocommerce form.register .nardone-referrer-status.is-error {
+            color: #c62828;
         }
         </style>
         <?php

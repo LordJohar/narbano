@@ -14,23 +14,37 @@ function nardone_normalize_phone_digits( $raw ) {
     if ( empty( $raw ) ) {
         return '';
     }
-    
+
     $str = wp_unslash( $raw );
-    
+
     // Persian digits
     $persian_digits = array( '۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹' );
     // Arabic digits
     $arabic_digits  = array( '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩' );
     // Latin digits
     $latin_digits   = array( '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' );
-    
-    // Convert
+
+    // Convert locale digits to Latin
     $str = str_replace( $persian_digits, $latin_digits, $str );
     $str = str_replace( $arabic_digits,  $latin_digits, $str );
-    
-    // Remove spaces
-    $str = preg_replace( '/\s+/', '', $str );
-    
+
+    // Remove all non-digits (including +, spaces, dashes)
+    $str = preg_replace( '/\D+/', '', $str );
+
+    // Handle common prefixes copied from phonebooks
+    // 0098xxxxxxxxxx -> 0xxxxxxxxx
+    if ( strpos( $str, '0098' ) === 0 && strlen( $str ) >= 14 ) {
+        $str = '0' . substr( $str, 4 );
+    }
+    // 98xxxxxxxxxx -> 0xxxxxxxxx
+    elseif ( strpos( $str, '98' ) === 0 && strlen( $str ) >= 12 ) {
+        $str = '0' . substr( $str, 2 );
+    }
+    // 9xxxxxxxxx (missing leading 0) -> 0xxxxxxxxx
+    elseif ( strpos( $str, '9' ) === 0 && strlen( $str ) === 10 ) {
+        $str = '0' . $str;
+    }
+
     return $str;
 }
 
@@ -130,12 +144,13 @@ function nardone_mask_user_name( $user ) {
     $parts = array();
 
     if ( ! empty( $first_char ) ) {
-        $parts[] = $first_char . '.';
+        // e.g., "م حسینی"
+        $parts[] = $first_char;
     }
 
     if ( ! empty( $last ) ) {
         $parts[] = $last;
     }
 
-    return trim( implode( '', $parts ) );
+    return trim( implode( ' ', $parts ) );
 }

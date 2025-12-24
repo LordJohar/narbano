@@ -82,3 +82,35 @@ function nardone_send_otp_ajax() {
 }
 add_action( 'wp_ajax_nardone_send_otp', 'nardone_send_otp_ajax' );
 add_action( 'wp_ajax_nopriv_nardone_send_otp', 'nardone_send_otp_ajax' );
+
+/**
+ * Check referrer by phone via AJAX.
+ */
+function nardone_check_referrer_ajax() {
+    // Verify nonce (reuse OTP nonce for simplicity)
+    if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'nardone_send_otp' ) ) {
+        wp_send_json_error( array( 'message' => __( 'خطای امنیتی', 'nardone' ) ) );
+    }
+
+    $phone = nardone_normalize_phone_digits( $_POST['phone'] ?? '' );
+
+    if ( ! preg_match( '/^09[0-9]{9}$/', $phone ) ) {
+        wp_send_json_error( array( 'message' => __( 'شماره معتبر نیست. مثال: 09121234567', 'nardone' ) ) );
+    }
+
+    $user = nardone_find_user_by_billing_phone( $phone );
+
+    if ( ! $user instanceof WP_User ) {
+        wp_send_json_error( array( 'message' => __( 'کاربری با این شماره یافت نشد.', 'nardone' ) ) );
+    }
+
+    $mask = nardone_mask_user_name( $user );
+
+    wp_send_json_success( array(
+        'name_mask' => $mask,
+        'user_id'   => $user->ID,
+        'phone'     => $phone,
+    ) );
+}
+add_action( 'wp_ajax_nardone_check_referrer', 'nardone_check_referrer_ajax' );
+add_action( 'wp_ajax_nopriv_nardone_check_referrer', 'nardone_check_referrer_ajax' );

@@ -125,20 +125,95 @@ function nardone_frontend_scripts() {
             });
         });
 
-        // Referrer toggle
-        var $refToggle = $form.find('.nardone-ref-toggle');
-        var $refField  = $form.find('.nardone-referrer-field');
+        // Referrer toggle + lookup
+        var \$refToggle = \$form.find('.nardone-ref-toggle');
+        var \$refField  = \$form.find('.nardone-referrer-field');
+        var \$refInput  = \$form.find('#reg_nardone_referrer_phone');
+        var \$refStatus = \$form.find('.nardone-referrer-status');
 
-        $refToggle.on('click', function(e) {
-            e.preventDefault();
-            $refField.toggleClass('is-visible');
-            if ($refField.hasClass('is-visible')) {
-                $refField.slideDown(200);
-            } else {
-                $refField.slideUp(200);
-                // Clear value when hiding
-                $refField.find('input').val('');
+        function setRefStatus(message, cls) {
+            \$refStatus.removeClass('is-success is-error');
+            if (cls) {
+                \$refStatus.addClass(cls);
             }
+            \$refStatus.text(message || '');
+        }
+
+        function normalizePhone(raw) {
+            raw = nardoneNormalizeDigits(raw || '');
+            // remove non-digits
+            raw = raw.replace(/\D+/g, '');
+            // handle 0098 / 98 / +98 prefixes
+            if (raw.indexOf('0098') === 0 && raw.length >= 14) {
+                raw = '0' + raw.substring(4);
+            } else if (raw.indexOf('98') === 0 && raw.length >= 12) {
+                raw = '0' + raw.substring(2);
+            } else if (raw.indexOf('9') === 0 && raw.length === 10) {
+                raw = '0' + raw;
+            }
+            return raw;
+        }
+
+        \$refToggle.on('click', function(e) {
+            e.preventDefault();
+            var expanded = \$refField.hasClass('is-visible');
+            if (expanded) {
+                \$refField.removeClass('is-visible').slideUp(200);
+                \$refToggle.attr('aria-expanded', 'false');
+                \$refInput.val('');
+                setRefStatus('', '');
+            } else {
+                \$refField.addClass('is-visible').slideDown(200);
+                \$refToggle.attr('aria-expanded', 'true');
+                \$refInput.trigger('focus');
+            }
+        });
+
+        function lookupReferrer(phone) {
+            setRefStatus('" . esc_js( __( 'در حال بررسی...', 'nardone' ) ) . "', '');
+
+            $.ajax({
+                url: NardoneData.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'nardone_check_referrer',
+                    nonce:  NardoneData.nonce,
+                    phone:  phone
+                }
+            })
+            .done(function(response) {
+                if (response && response.success && response.data && response.data.name_mask) {
+                    setRefStatus(response.data.name_mask, 'is-success');
+                } else {
+                    var msg = (response && response.data && response.data.message)
+                        ? response.data.message
+                        : '" . esc_js( __( 'معرفی با این شماره یافت نشد.', 'nardone' ) ) . "';
+                    setRefStatus(msg, 'is-error');
+                }
+            })
+            .fail(function() {
+                setRefStatus('" . esc_js( __( 'خطا در برقراری ارتباط. دوباره تلاش کنید.', 'nardone' ) ) . "', 'is-error');
+            });
+        }
+
+        \$refInput.on('blur', function() {
+            var raw   = $(this).val();
+            var phone = normalizePhone(raw);
+            $(this).val(phone);
+
+            if (!phone) {
+                setRefStatus('', '');
+                return;
+            }
+
+            var phoneRegex = /^09[0-9]{9}$/;
+            if (!phoneRegex.test(phone)) {
+                setRefStatus('" . esc_js( __( 'شماره معتبر نیست (مثال: 09121234567)', 'nardone' ) ) . "', 'is-error');
+                return;
+            }
+
+            lookupReferrer(phone);
         });
 
     });
