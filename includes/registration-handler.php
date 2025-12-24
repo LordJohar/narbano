@@ -211,6 +211,10 @@ function nardone_hide_email_field() {
             align-items: center;
         }
 
+        .nardone-otp-input-wrapper{ 
+            width: 100%; 
+        }
+        
         .woocommerce form.register .nardone-otp-input-wrapper .input-text {
             flex: 1;
             margin-bottom: 0;
