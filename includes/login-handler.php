@@ -114,6 +114,7 @@ function nardone_render_otp_login_ui() {
             color: #fff;
             white-space: nowrap;
             border-radius: 4px;
+            width: auto !important;
         }
         .nardone-message {
             padding: 10px;
@@ -367,7 +368,7 @@ function nardone_ajax_send_login_otp() {
         'https://edge.ippanel.com/v1/api/send',
         array(
             'headers' => array(
-                'Authorization' => 'Bearer ' . $api_key,
+                'Authorization' => $api_key,
                 'Content-Type'  => 'application/json',
             ),
             'body'    => wp_json_encode( array(

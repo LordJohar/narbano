@@ -15,6 +15,9 @@ define('NARDONE_PLUGIN_VERSION', '0.5.0');
 define('NARDONE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('NARDONE_OTP_EXPIRY', 3 * MINUTE_IN_SECONDS);
 
+// Include constants
+require_once NARDONE_PLUGIN_DIR . 'includes/constants.php';
+
 // Include core files
 require_once NARDONE_PLUGIN_DIR . 'includes/core-functions.php';
 require_once NARDONE_PLUGIN_DIR . 'includes/registration-form.php';
