@@ -12,6 +12,13 @@
 4. **Form validation** ([validation.php](includes/validation.php)): On submit, validates phone format/uniqueness, OTP code, checks transient expiry
 5. **Customer setup** ([customer-data.php](includes/customer-data.php)): Auto-generates username (`nardoneXXXX`), injects synthetic email, saves phone to user meta
 
+### Referrer Registration Flow
+1. **Form rendering** ([registration-handler.php](includes/registration-handler.php)): Adds direct referrer input field with label, status display, and description
+2. **Client-side validation** ([frontend-scripts.php](includes/frontend-scripts.php)): On blur, normalizes phone, validates format, AJAX lookup for masked name
+3. **Backend lookup** ([ajax-otp.php](includes/ajax-otp.php)): `nardone_check_referrer` action validates phone, finds user, returns masked name (first char + last name)
+4. **Soft validation** ([validation.php](includes/validation.php)): Normalizes referrer phone, checks format, stashes matched user info without blocking registration
+5. **Customer setup** ([customer-data.php](includes/customer-data.php)): Saves referrer user ID and masked name in user meta if found
+
 ### Transient-Based OTP Storage
 - **Key**: `nardone_otp_<md5_of_phone>` (stores `code`, `phone`, `expires`, `last_sent` timestamps)
 - **Expiry**: 3 minutes default (`NARDONE_OTP_EXPIRY = 3 * MINUTE_IN_SECONDS`)
@@ -19,8 +26,9 @@
 - **Lookup**: Query `get_users( array('meta_key' => 'billing_phone', 'meta_value' => $phone) )` for phone uniqueness
 
 ### Critical Helpers
-- **`nardone_normalize_phone_digits()`**: Converts Persian (۰۱۲۳۴۵۶۷۸۹) & Arabic (٠١٢٣٤٥٦٧٨٩) to Latin (0-9), strips whitespace
+- **`nardone_normalize_phone_digits()`**: Converts Persian (۰۱۲۳۴۵۶۷۸۹) & Arabic (٠١٢٣٤٥٦٧٨٩) to Latin (0-9), strips non-digits, handles +98/98/0098 prefixes to 09 format
 - **`nardone_generate_username()`**: Loops `do { $u = 'nardone' . wp_rand(1000,9999) } while (username_exists($u))`
+- **`nardone_mask_user_name()`**: Returns "FirstChar.LastName" (e.g., "م حسینی") for Persian names
 - **Phone validation**: Always use normalized input against regex `^09[0-9]{9}$`
 
 ## Project-Specific Conventions
@@ -31,12 +39,18 @@
 $phone = nardone_normalize_phone_digits( $_POST['billing_phone'] );
 if ( ! preg_match( '/^09[0-9]{9}$/', $phone ) ) { /* error */ }
 ```
+Handles Persian/Arabic digits, strips non-digits, converts +98/98/0098 prefixes to 09 format (e.g., +989121234567 → 09121234567).
 
 ### Synthetic Email (Required for WooCommerce)
 If registration email is empty, generate fallback before saving user:
 - Format: `u<phone_digits>-<rand4>@noemail.nardone` (e.g., `u9121234567-5678@noemail.nardone`)
 - Set in two places: (1) [customer-data.php](includes/customer-data.php) via `woocommerce_new_customer_data` filter (line ~18), (2) early POST hook injection in same file (line ~40+) before WooCommerce processes form
 - Phone is stored as user meta `billing_phone` for future lookups via `get_users( array( 'meta_key' => 'billing_phone', 'meta_value' => $phone ) )`
+
+### Referrer Data Saving
+- Optional referrer phone stored as `nardone_referrer_phone` user meta
+- If valid user found, saves `nardone_referrer_user` (user ID) and `nardone_referrer_name_mask` (masked name)
+- Soft validation: invalid referrer shows warning but doesn't block registration
 
 ### IPPanel SMS API
 **Endpoint**: `https://edge.ippanel.com/v1/api/send` | **Auth**: Bearer token in `Authorization` header  
@@ -129,8 +143,9 @@ $data = get_transient( $otp_key ); // Check if exists & not expired
 - **Registration hook**: `woocommerce_register_post` fires before validation; `woocommerce_created_customer` after
 
 ## Testing & Verification
-- **Digit normalization**: Test Persian (۰۹۱۲۱۲۳۴۵۶۷) and Arabic (٠٩١٢١٢٣٤٥٦٧) numerals both normalize to Latin
+- **Digit normalization**: Test Persian (۰۹۱۲۱۲۳۴۵۶۷) and Arabic (٠٩١٢١٢٣٤٥٦٧) numerals both normalize to Latin; test +98/98/0098 prefixes convert to 09
 - **OTP expiry**: Request OTP, wait 3+ minutes, submit form → should fail with "expired" error
 - **Rate limit**: Send OTP twice within 60 seconds → second should fail with "wait 1 minute" message
 - **Phone uniqueness**: Register user A with `09121234567`, try user B with same phone → should fail
 - **Synthetic email**: Register without email field → user record should have `u9121234567-XXXX@noemail.nardone`
+- **Referrer lookup**: Enter existing user phone in referrer field → should show masked name (e.g., "م حسینی"); enter invalid phone → show error; leave empty → no error
