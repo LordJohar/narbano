@@ -1,151 +1,48 @@
-# Nardone Registration Plugin - AI Coding Instructions
+# Nardone Registration Plugin — AI Coding Guide
 
-## Project Overview
-**Nardone** is a WordPress plugin enabling WooCommerce registration via mobile number + OTP verification through the **IPPanel SMS gateway**. Version: 0.5.0. The plugin is **modular** with clear concerns separation across `includes/` files. All Persian/Arabic digit handling is normalized to Latin numerals throughout. Architecture spans registration flow (account page), login helpers, and checkout UX improvements.
+Concise, codebase-specific rules to get productive fast. This is a WordPress + WooCommerce plugin that adds OTP-by-SMS registration/login via IPPanel. No build tooling; work directly in PHP templates/hooks.
 
-## Architecture & Data Flow
+## Architecture map (key files)
+- `nardone-registration.php`: bootstrap; loads modules in order: `core-functions.php`, `registration-handler.php`, `login-handler.php`, `checkout-*`, `admin-settings.php`, `frontend-assets.php`, `ajax-otp.php`.
+- `includes/constants.php`: option keys/constants (use `NARDONE_OPT_*`, `NARDONE_OTP_EXPIRY`).
+- `includes/helpers.php`: **digit normalization**, username generator, name masking. Always reuse these.
+- `includes/dependencies.php`: WooCommerce presence guard.
+- `includes/registration-form.php`: renders My Account form fields (first/last, phone, OTP) and hides email.
+- `includes/frontend-scripts.php`: inline jQuery for OTP send + referrer blur lookup (normalizes digits before AJAX).
+- `includes/ajax-otp.php`: AJAX send OTP + referrer lookup; validates nonce, rate-limit (60s), expiry (3m), IPPanel call.
+- `includes/validation.php`: server-side registration validation (phone format/uniqueness, OTP correctness/expiry, soft referrer warn).
+- `includes/customer-data.php`: injects synthetic email + username, saves phone + referrer meta.
+- `includes/login-handler.php`: phone-based login helper; `checkout-*.php` trio adds inline checkout OTP login.
+- `includes/password-policy.php`: relaxes WC password rules (meter visible, not enforced).
+- `templates/myaccount/form-register.php`: WC template override used by registration form.
 
-### OTP Registration Flow
-1. **Form rendering** ([registration-form.php](includes/registration-form.php)): Injects fields (first/last name, phone, OTP code input) and hides email via CSS
-2. **Client-side** ([frontend-scripts.php](includes/frontend-scripts.php)): Inline jQuery on OTP "Send" button → normalizes digits → triggers AJAX
-3. **Backend OTP** ([ajax-otp.php](includes/ajax-otp.php)): Validates phone, checks rate limit (60s), generates 6-digit OTP, stores in transient, calls IPPanel API
-4. **Form validation** ([validation.php](includes/validation.php)): On submit, validates phone format/uniqueness, OTP code, checks transient expiry
-5. **Customer setup** ([customer-data.php](includes/customer-data.php)): Auto-generates username (`nardoneXXXX`), injects synthetic email, saves phone to user meta
+## Non-negotiable conventions
+- **Digit normalization everywhere**: call `nardone_normalize_phone_digits()` before regex/storage. Accepts Persian/Arabic digits and +98/98/0098 → `09XXXXXXXXX`. Validate with `'^09[0-9]{9}$'`.
+- **OTP transient**: key `nardone_otp_<md5(phone)>` storing `code, phone, expires, last_sent`; expiry = `NARDONE_OTP_EXPIRY` (3m). Reject resend within 60s.
+- **Synthetic email**: if missing, set `u<phone>-<rand4>@noemail.nardone` both in early POST shim and `woocommerce_new_customer_data` (see `customer-data.php`). Phone saved as `billing_phone` user meta; uniqueness via `get_users` on that meta.
+- **Username**: generated `nardone####` via helper loop until unique.
+- **Referrer**: optional phone stored as `nardone_referrer_phone`; when matched, also store `nardone_referrer_user` and masked name via helper. Validation is soft (warn, don’t block).
+- **i18n**: text domain `nardone` for all strings.
 
-### Referrer Registration Flow
-1. **Form rendering** ([registration-handler.php](includes/registration-handler.php)): Adds direct referrer input field with label, status display, and description
-2. **Client-side validation** ([frontend-scripts.php](includes/frontend-scripts.php)): On blur, normalizes phone, validates format, AJAX lookup for masked name
-3. **Backend lookup** ([ajax-otp.php](includes/ajax-otp.php)): `nardone_check_referrer` action validates phone, finds user, returns masked name (first char + last name)
-4. **Soft validation** ([validation.php](includes/validation.php)): Normalizes referrer phone, checks format, stashes matched user info without blocking registration
-5. **Customer setup** ([customer-data.php](includes/customer-data.php)): Saves referrer user ID and masked name in user meta if found
+## IPPanel integration
+- Endpoint `https://edge.ippanel.com/v1/api/send`, bearer token header. Pattern payload uses `from_number`, `code`, `recipients` (MSISDN `98...`), `params` keyed by option `NARDONE_OPT_PATTERN_PARAM` (default `otp_code`). See `ajax-otp.php` around body build.
 
-### Transient-Based OTP Storage
-- **Key**: `nardone_otp_<md5_of_phone>` (stores `code`, `phone`, `expires`, `last_sent` timestamps)
-- **Expiry**: 3 minutes default (`NARDONE_OTP_EXPIRY = 3 * MINUTE_IN_SECONDS`)
-- **Rate limit**: Blocks resend within 60s per phone number (checked via transient timestamps)
-- **Lookup**: Query `get_users( array('meta_key' => 'billing_phone', 'meta_value' => $phone) )` for phone uniqueness
+## Hooks & security
+- AJAX: `wp_ajax_nardone_send_otp` / `wp_ajax_nopriv_nardone_send_otp`; nonce `nardone_send_otp`. Checkout login analogs use `nardone_checkout_login` nonce.
+- Registration validation hook: `woocommerce_registration_errors` also removes default email-required/invalid errors.
+- Data hooks: `woocommerce_new_customer_data` + `woocommerce_new_customer` for meta persistence.
+- Sanitize inputs: `sanitize_text_field( wp_unslash( ... ) )` before use.
 
-### Critical Helpers
-- **`nardone_normalize_phone_digits()`**: Converts Persian (۰۱۲۳۴۵۶۷۸۹) & Arabic (٠١٢٣٤٥٦٧٨٩) to Latin (0-9), strips non-digits, handles +98/98/0098 prefixes to 09 format
-- **`nardone_generate_username()`**: Loops `do { $u = 'nardone' . wp_rand(1000,9999) } while (username_exists($u))`
-- **`nardone_mask_user_name()`**: Returns "FirstChar.LastName" (e.g., "م حسینی") for Persian names
-- **Phone validation**: Always use normalized input against regex `^09[0-9]{9}$`
+## Checkout inline OTP login
+- `checkout-redirect.php`: guest redirect flow.
+- `checkout-login.php`: renders sidebar OTP login form.
+- `checkout-handler.php`: AJAX login flow (nonce check, OTP transient read/validate, login user).
 
-## Project-Specific Conventions
+## Common tasks (patterns)
+- Add a field: render in `registration-form.php`; validate in `validation.php` after phone; persist via `woocommerce_new_customer_data` in `customer-data.php`.
+- Change SMS template param name: update option or JSON `params` in `ajax-otp.php` (keep key aligned with `NARDONE_OPT_PATTERN_PARAM`).
+- Debug OTP: compute key `nardone_otp_<md5(normalized_phone)>`, inspect transient; ensure resend ≥60s.
 
-### Digit Normalization (CRITICAL)
-**Every** phone input must pass through `nardone_normalize_phone_digits()` before regex checks or storage:
-```php
-$phone = nardone_normalize_phone_digits( $_POST['billing_phone'] );
-if ( ! preg_match( '/^09[0-9]{9}$/', $phone ) ) { /* error */ }
-```
-Handles Persian/Arabic digits, strips non-digits, converts +98/98/0098 prefixes to 09 format (e.g., +989121234567 → 09121234567).
-
-### Synthetic Email (Required for WooCommerce)
-If registration email is empty, generate fallback before saving user:
-- Format: `u<phone_digits>-<rand4>@noemail.nardone` (e.g., `u9121234567-5678@noemail.nardone`)
-- Set in two places: (1) [customer-data.php](includes/customer-data.php) via `woocommerce_new_customer_data` filter (line ~18), (2) early POST hook injection in same file (line ~40+) before WooCommerce processes form
-- Phone is stored as user meta `billing_phone` for future lookups via `get_users( array( 'meta_key' => 'billing_phone', 'meta_value' => $phone ) )`
-
-### Referrer Data Saving
-- Optional referrer phone stored as `nardone_referrer_phone` user meta
-- If valid user found, saves `nardone_referrer_user` (user ID) and `nardone_referrer_name_mask` (masked name)
-- Soft validation: invalid referrer shows warning but doesn't block registration
-
-### IPPanel SMS API
-**Endpoint**: `https://edge.ippanel.com/v1/api/send` | **Auth**: Bearer token in `Authorization` header  
-**Request body** (from [ajax-otp.php](includes/ajax-otp.php) line ~70):
-```json
-{
-  "sending_type": "pattern",
-  "from_number": "<option: nardone_otp_from_number>",
-  "code": "<option: nardone_otp_pattern_code>",
-  "recipients": ["989121234567"],
-  "params": { "otp_code": "123456" }
-}
-```
-Validation & rate-limit checks happen **before** this call; failures return `wp_send_json_error()`.
-
-### WordPress Hooks & Security
-- **AJAX nonce**: Verify `wp_verify_nonce( $_POST['nonce'], 'nardone_send_otp' )` in [ajax-otp.php](includes/ajax-otp.php)
-- **Input sanitization**: `sanitize_text_field( wp_unslash( $_POST['field'] ) )`
-- **AJAX actions**: `wp_ajax_nardone_send_otp` and `wp_ajax_nopriv_nardone_send_otp` (both logged-in and guests)
-- **Validation hook**: `woocommerce_registration_errors` to add/remove errors; remove `'registration-error-email-required'` & `'registration-error-invalid-email'`
-- **Data hooks**: `woocommerce_new_customer_data` (pre-insert) and `woocommerce_new_customer` (post-insert)
-
-### Option Keys (Always Use Constants)
-Reference settings via `NARDONE_OPT_*` constants from [constants.php](includes/constants.php):
-```php
-NARDONE_OPT_API_KEY       // 'nardone_otp_api_key'
-NARDONE_OPT_PATTERN_CODE  // 'nardone_otp_pattern_code'
-NARDONE_OPT_FROM_NUMBER   // 'nardone_otp_from_number'
-NARDONE_OPT_PATTERN_PARAM // 'nardone_otp_pattern_param' (default: 'otp_code')
-```
-Settings page: **Settings → Nardone OTP** (registered via [admin-settings.php](includes/admin-settings.php))
-
-### Translation Strings
-All user-facing text uses text domain `'nardone'`:
-```php
-__( 'Please enter your mobile number.', 'nardone' )
-esc_html__( 'Verification code (OTP)', 'nardone' )
-```
-
-### Module Loading Order (Main Plugin File)
-Bootstrap in [nardone-registration.php](nardone-registration.php) loads modules in strict order:
-1. `core-functions.php` - Shared utilities
-2. `registration-handler.php` - Registration workflow hooks
-3. `login-handler.php` - Login enhancements (AJAX login via phone)
-4. `checkout-*.php` (3 files) - Checkout UX: redirect flows, auto-login, login form injection
-5. `admin-settings.php` - Settings page
-6. `frontend-assets.php` - JS/CSS enqueue for frontend
-7. `ajax-otp.php` - AJAX endpoint for OTP delivery
-
-No `init` hook handlers in main file—all functionality triggered via `add_action` in individual modules.
-
-### Checkout-Related Modules
-- **`checkout-redirect.php`**: Redirects checkout page to registration for guests (via `wp_safe_remote_post` to `/wc-api/checkout-redirect`)
-- **`checkout-login.php`**: Injects mobile+OTP login form in checkout sidebar for guests (alternative to full registration)
-- **`checkout-handler.php`**: AJAX handler for checkout-page phone login with OTP verification
-- These three work together to offer **inline OTP login** during checkout without leaving checkout page
-
-## Common Tasks
-
-**Add a registration field**:
-1. Inject via `woocommerce_register_form` hook in [registration-form.php](includes/registration-form.php)
-2. Add validation in [validation.php](includes/validation.php) (after phone validation)
-3. Save via `woocommerce_new_customer_data` filter in [customer-data.php](includes/customer-data.php)
-
-**Change OTP SMS template**:
-1. Edit `"params"` array in [ajax-otp.php](includes/ajax-otp.php) around line 70
-2. Ensure key name matches `get_option( NARDONE_OPT_PATTERN_PARAM )` value
-
-**Modify checkout login behavior**:
-1. Checkout login form HTML: [checkout-login.php](includes/checkout-login.php)
-2. Checkout login AJAX handler: [checkout-handler.php](includes/checkout-handler.php)
-3. Redirect logic (guest → registration): [checkout-redirect.php](includes/checkout-redirect.php)
-
-**Debug OTP transient**:
-```php
-$phone = '989121234567'; // Normalized
-$otp_key = 'nardone_otp_' . md5( $phone );
-$data = get_transient( $otp_key ); // Check if exists & not expired
-```
-
-## WordPress Hooks & Security (Extended)
-- **AJAX nonce**: Verify `wp_verify_nonce( $_POST['nonce'], 'nardone_send_otp' )` in [ajax-otp.php](includes/ajax-otp.php)
-- **Checkout nonce**: Verify `wp_verify_nonce( $_POST['nonce'], 'nardone_checkout_login' )` in [checkout-handler.php](includes/checkout-handler.php)
-- **Input sanitization**: `sanitize_text_field( wp_unslash( $_POST['field'] ) )`
-- **AJAX actions**: 
-  - `wp_ajax_nardone_send_otp` and `wp_ajax_nopriv_nardone_send_otp` (registration OTP)
-  - `wp_ajax_nardone_checkout_login` and `wp_ajax_nopriv_nardone_checkout_login` (checkout OTP)
-- **Validation hook**: `woocommerce_registration_errors` to add/remove errors; remove `'registration-error-email-required'` & `'registration-error-invalid-email'`
-- **Data hooks**: `woocommerce_new_customer_data` (pre-insert) and `woocommerce_new_customer` (post-insert)
-- **Registration hook**: `woocommerce_register_post` fires before validation; `woocommerce_created_customer` after
-
-## Testing & Verification
-- **Digit normalization**: Test Persian (۰۹۱۲۱۲۳۴۵۶۷) and Arabic (٠٩١٢١٢٣٤٥٦٧) numerals both normalize to Latin; test +98/98/0098 prefixes convert to 09
-- **OTP expiry**: Request OTP, wait 3+ minutes, submit form → should fail with "expired" error
-- **Rate limit**: Send OTP twice within 60 seconds → second should fail with "wait 1 minute" message
-- **Phone uniqueness**: Register user A with `09121234567`, try user B with same phone → should fail
-- **Synthetic email**: Register without email field → user record should have `u9121234567-XXXX@noemail.nardone`
-- **Referrer lookup**: Enter existing user phone in referrer field → should show masked name (e.g., "م حسینی"); enter invalid phone → show error; leave empty → no error
+## Working notes
+- No build/test commands; test in a WP+WC site. Ensure WooCommerce active (`dependencies.php`).
+- Keep module order intact in bootstrap; avoid adding `init` hooks there—add actions/filters inside respective include files.
