@@ -59,7 +59,7 @@ function nardone_customize_new_customer_data( $data ) {
     if ( empty( $data['user_email'] ) && ! empty( $_POST['billing_phone'] ) ) {
         $phone = nardone_normalize_phone_digits( $_POST['billing_phone'] );
         if ( ! empty( $phone ) ) {
-            $fake_email = 'user_' . $phone . '@noemail.nardone';
+            $fake_email = 'u' . $phone . '-' . wp_rand( 1000, 9999 ) . '@noemail.nardone';
             $data['user_email'] = sanitize_email( $fake_email );
         }
     }
@@ -87,7 +87,7 @@ function nardone_force_fake_email() {
     if ( $is_registration && empty( $_POST['email'] ) && ! empty( $_POST['billing_phone'] ) ) {
         $phone = nardone_normalize_phone_digits( $_POST['billing_phone'] );
         if ( ! empty( $phone ) ) {
-            $fake_email = 'user_' . $phone . '_' . wp_rand( 1000, 9999 ) . '@noemail.nardone';
+            $fake_email = 'u' . $phone . '-' . wp_rand( 1000, 9999 ) . '@noemail.nardone';
             $_POST['email'] = $fake_email;
             $_REQUEST['email'] = $fake_email;
         }

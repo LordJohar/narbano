@@ -117,7 +117,7 @@ function nardone_checkout_login_screen() {
             
             // Generate fake email if empty
             if (!email) {
-                email = 'guest_' + phone + '_' + Date.now() + '@noemail.nardone';
+                email = 'u' + phone + '-' + Date.now() + '@noemail.nardone';
                 $('#guest_email').val(email);
             }
             
