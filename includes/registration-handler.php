@@ -164,6 +164,7 @@ add_filter( 'woocommerce_registration_errors', 'nardone_validate_registration', 
  * Save registration fields
  */
 function nardone_save_registration_fields( $customer_id ) {
+
     // Save first name
     if ( isset( $_POST['billing_first_name'] ) ) {
         $first_name = sanitize_text_field( wp_unslash( $_POST['billing_first_name'] ) );
@@ -183,9 +184,31 @@ function nardone_save_registration_fields( $customer_id ) {
         $phone = nardone_normalize_phone_digits( $_POST['billing_phone'] );
         update_user_meta( $customer_id, 'billing_phone', $phone );
     }
-    
+
     // Mark mobile as verified
     update_user_meta( $customer_id, 'nardone_mobile_verified', 1 );
+	
+    // Optional referrer data.
+    $ref_phone_norm = isset( $_POST['nardone_referrer_phone_norm'] ) ? nardone_normalize_phone_digits( $_POST['nardone_referrer_phone_norm'] ) : '';
+    $ref_user_id    = isset( $_POST['nardone_referrer_user_id'] ) ? absint( $_POST['nardone_referrer_user_id'] ) : 0;
+    $ref_name_mask  = isset( $_POST['nardone_referrer_name_mask'] ) ? sanitize_text_field( wp_unslash( $_POST['nardone_referrer_name_mask'] ) ) : '';
+
+    $ref_phone = isset( $_POST['nardone_referrer_phone'] ) ? nardone_normalize_phone_digits( $_POST['nardone_referrer_phone'] ) : '';
+
+    if ( ! empty( trim($ref_phone_norm) ) ) {
+        update_user_meta( $customer_id, 'nardone_referrer_phone', $ref_phone_norm );
+    } else if ( ! empty( trim($ref_phone) ) ) {
+        update_user_meta( $customer_id, 'nardone_referrer_phone', $ref_phone );
+    }
+
+    if ( $ref_user_id > 0 ) {
+        update_user_meta( $customer_id, 'nardone_referrer_user', $ref_user_id );
+    }
+
+    if ( ! empty( $ref_name_mask ) ) {
+        update_user_meta( $customer_id, 'nardone_referrer_name_mask', $ref_name_mask );
+    }
+
 }
 add_action( 'woocommerce_created_customer', 'nardone_save_registration_fields', 10, 1 );
 
